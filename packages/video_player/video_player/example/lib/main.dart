@@ -6,7 +6,6 @@
 
 /// An example of using the plugin, controlling lifecycle and playback of the
 /// video.
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
@@ -87,8 +86,7 @@ class _ButterFlyAssetVideoInList extends StatelessWidget {
                 title: Text("Video video"),
               ),
               Stack(
-                  alignment: FractionalOffset.bottomRight +
-                      const FractionalOffset(-0.1, -0.1),
+                  alignment: FractionalOffset.bottomRight + const FractionalOffset(-0.1, -0.1),
                   children: <Widget>[
                     _ButterFlyAssetVideo(),
                     Image.asset('assets/flutter-mark-square-64.png'),
@@ -187,7 +185,11 @@ class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
               child: Stack(
                 alignment: Alignment.bottomCenter,
                 children: <Widget>[
-                  VideoPlayer(_controller),
+                  InkWell(
+                      onLongPress: () {
+                        _controller.moveToPip();
+                      },
+                      child: VideoPlayer(_controller)),
                   _ControlsOverlay(controller: _controller),
                   VideoProgressIndicator(_controller, allowScrubbing: true),
                 ],
@@ -209,8 +211,8 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
   VideoPlayerController _controller;
 
   Future<ClosedCaptionFile> _loadCaptions() async {
-    final String fileContents = await DefaultAssetBundle.of(context)
-        .loadString('assets/bumble_bee_captions.srt');
+    final String fileContents =
+        await DefaultAssetBundle.of(context).loadString('assets/bumble_bee_captions.srt');
     return SubRipCaptionFile(fileContents);
   }
 
@@ -352,8 +354,7 @@ class _PlayerVideoAndPopPageState extends State<_PlayerVideoAndPopPage> {
   void initState() {
     super.initState();
 
-    _videoPlayerController =
-        VideoPlayerController.asset('assets/Butterfly-209.mp4');
+    _videoPlayerController = VideoPlayerController.asset('assets/Butterfly-209.mp4');
     _videoPlayerController.addListener(() {
       if (startedPlaying && !_videoPlayerController.value.isPlaying) {
         Navigator.pop(context);

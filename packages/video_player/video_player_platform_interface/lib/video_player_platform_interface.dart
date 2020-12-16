@@ -45,8 +45,7 @@ abstract class VideoPlayerPlatform {
       try {
         instance._verifyProvidesDefaultImplementations();
       } on NoSuchMethodError catch (_) {
-        throw AssertionError(
-            'Platform interfaces must not be implemented with `implements`');
+        throw AssertionError('Platform interfaces must not be implemented with `implements`');
       }
     }
     _instance = instance;
@@ -87,6 +86,11 @@ abstract class VideoPlayerPlatform {
 
   /// Stops the video playback.
   Future<void> pause(int textureId) {
+    throw UnimplementedError('pause() has not been implemented.');
+  }
+
+  ///
+  Future<void> moveToPip(int textureId) {
     throw UnimplementedError('pause() has not been implemented.');
   }
 
@@ -252,11 +256,7 @@ class VideoEvent {
   }
 
   @override
-  int get hashCode =>
-      eventType.hashCode ^
-      duration.hashCode ^
-      size.hashCode ^
-      buffered.hashCode;
+  int get hashCode => eventType.hashCode ^ duration.hashCode ^ size.hashCode ^ buffered.hashCode;
 }
 
 /// Type of the event.
