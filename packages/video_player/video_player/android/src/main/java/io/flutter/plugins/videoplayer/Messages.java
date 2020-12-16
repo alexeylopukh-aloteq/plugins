@@ -317,6 +317,8 @@ public class Messages {
 
     void setPlaybackSpeed(PlaybackSpeedMessage arg);
 
+    void movePip(TextureMessage arg);
+
     void play(TextureMessage arg);
 
     PositionMessage position(TextureMessage arg);
@@ -491,6 +493,30 @@ public class Messages {
                 }
                 reply.reply(wrapped);
               });
+        } else {
+          channel.setMessageHandler(null);
+        }
+      }
+      {
+        BasicMessageChannel<Object> channel =
+                new BasicMessageChannel<>(
+                        binaryMessenger,
+                        "dev.flutter.pigeon.VideoPlayerApi.moveToPip",
+                        new StandardMessageCodec());
+        if (api != null) {
+          channel.setMessageHandler(
+                  (message, reply) -> {
+                    HashMap<String, HashMap> wrapped = new HashMap<>();
+                    try {
+                      @SuppressWarnings("ConstantConditions")
+                      TextureMessage input = TextureMessage.fromMap((HashMap) message);
+                      api.movePip(input);
+                      wrapped.put("result", null);
+                    } catch (Exception exception) {
+                      wrapped.put("error", wrapError(exception));
+                    }
+                    reply.reply(wrapped);
+                  });
         } else {
           channel.setMessageHandler(null);
         }
