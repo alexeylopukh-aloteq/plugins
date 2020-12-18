@@ -271,6 +271,10 @@ final class VideoPlayer {
     }
   }
 
+  SimpleExoPlayer getExoPlayer() {
+    return exoPlayer;
+  }
+
   void dispose() {
     if (isInitialized) {
       exoPlayer.stop();
