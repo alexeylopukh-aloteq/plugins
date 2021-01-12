@@ -6,6 +6,7 @@ package io.flutter.plugins.videoplayer;
 
 import android.app.Activity;
 import android.app.PictureInPictureParams;
+import android.app.RemoteAction;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -31,6 +32,9 @@ import io.flutter.plugins.videoplayer.Messages.VolumeMessage;
 import io.flutter.view.TextureRegistry;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.net.ssl.HttpsURLConnection;
 
 /** Android platform implementation of the VideoPlayerPlugin. */
@@ -189,9 +193,15 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi, Activit
 
   @Override
   public void movePip(TextureMessage arg) {
+    VideoPlayer player = videoPlayers.get(arg.getTextureId());
+    BackgroundModeManager.Companion.getInstance().setPlayer(player.getExoPlayer());
+    Intent intent = new Intent(appActivity, PlayerNotificationService.class);
     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+      appActivity.startForegroundService(intent);
       PictureInPictureParams params = new PictureInPictureParams.Builder().build();
       appActivity.enterPictureInPictureMode(params);
+    } else {
+      appActivity.startService(intent);
     }
   }
 
