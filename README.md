@@ -16,9 +16,9 @@ These plugins are also available on
 
 
 ## Android pip implementation
-Add this in manifest file for flutter activity
-android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
-android:supportsPictureInPicture="true"
+Add this in manifest file for flutter activity<br/>
+android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"<br/>
+android:supportsPictureInPicture="true"<br/>
 
 ## Issues
 
