@@ -14,6 +14,12 @@ about plugins, and how to use them, see
 These plugins are also available on
 [pub](https://pub.dev/flutter/packages).
 
+
+## Android pip implementation
+Add this in manifest file for flutter activity
+android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
+android:supportsPictureInPicture="true"
+
 ## Issues
 
 Please file any issues, bugs, or feature requests in the [main flutter
