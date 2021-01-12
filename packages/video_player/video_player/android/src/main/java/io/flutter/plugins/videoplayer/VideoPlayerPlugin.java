@@ -5,6 +5,7 @@
 package io.flutter.plugins.videoplayer;
 
 import android.app.Activity;
+import android.app.PictureInPictureParams;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -188,13 +189,10 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi, Activit
 
   @Override
   public void movePip(TextureMessage arg) {
-    VideoPlayer player = videoPlayers.get(arg.getTextureId());
-    BackgroundModeManager.Companion.getInstance().setPlayer(player.getExoPlayer());
-//    if (appContext != null) {
-      Intent intent = new Intent(appActivity, PipActivity.class);
-      intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-    appActivity.startActivity(new Intent(appActivity, PipActivity.class));
-//    }
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+      PictureInPictureParams params = new PictureInPictureParams.Builder().build();
+      appActivity.enterPictureInPictureMode(params);
+    }
   }
 
   public void play(TextureMessage arg) {
