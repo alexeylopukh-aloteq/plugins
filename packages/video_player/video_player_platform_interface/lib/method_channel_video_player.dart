@@ -70,6 +70,16 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
+  Future<void> disableBackgroundMode(int textureId) {
+    return _api.moveToPip(TextureMessage()..textureId = textureId);
+  }
+
+  @override
+  Future<void> moveToBackgroundMode(int textureId) {
+    return _api.moveToPip(TextureMessage()..textureId = textureId);
+  }
+
+  @override
   Future<void> setVolume(int textureId, double volume) {
     return _api.setVolume(VolumeMessage()
       ..textureId = textureId

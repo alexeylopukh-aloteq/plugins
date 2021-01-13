@@ -91,7 +91,17 @@ abstract class VideoPlayerPlatform {
 
   ///
   Future<void> moveToPip(int textureId) {
-    throw UnimplementedError('pause() has not been implemented.');
+    throw UnimplementedError('moveToPip() has not been implemented.');
+  }
+
+  ///
+  Future<void> moveToBackgroundMode(int textureId) {
+    throw UnimplementedError('moveToBackgroundMode() has not been implemented.');
+  }
+
+  ///
+  Future<void> disableBackgroundMode(int textureId) {
+    throw UnimplementedError('disableBackgroundMode() has not been implemented.');
   }
 
   /// Sets the volume to a range between 0.0 and 1.0.
