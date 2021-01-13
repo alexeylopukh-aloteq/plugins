@@ -41,7 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-final class VideoPlayer {
+final public class VideoPlayer {
   private static final String FORMAT_SS = "ss";
   private static final String FORMAT_DASH = "dash";
   private static final String FORMAT_HLS = "hls";
@@ -60,6 +60,8 @@ final class VideoPlayer {
   private boolean isInitialized = false;
 
   private final VideoPlayerOptions options;
+
+  Boolean backgroundMode = false;
 
   VideoPlayer(
       Context context,
@@ -281,7 +283,7 @@ final class VideoPlayer {
   }
 
   void dispose() {
-    if (isInitialized) {
+    if (isInitialized && !backgroundMode) {
       exoPlayer.stop();
     }
     textureEntry.release();
@@ -289,7 +291,7 @@ final class VideoPlayer {
     if (surface != null) {
       surface.release();
     }
-    if (exoPlayer != null) {
+    if (exoPlayer != null && !backgroundMode) {
       exoPlayer.release();
     }
   }

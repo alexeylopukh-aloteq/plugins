@@ -1,6 +1,5 @@
 package io.flutter.plugins.videoplayer
 
-import com.google.android.exoplayer2.SimpleExoPlayer
 
 class BackgroundModeManager private constructor() {
     companion object {
@@ -17,9 +16,16 @@ class BackgroundModeManager private constructor() {
 
     }
 
-    var player: SimpleExoPlayer? = null
+    var player: VideoPlayer? = null
         get() = field
         set(value) {
+            if (value == null){
+                field?.backgroundMode = false
+                field?.dispose()
+            } else {
+                value.backgroundMode = true
+            }
             field = value
+
         }
 }

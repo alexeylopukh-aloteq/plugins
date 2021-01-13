@@ -97,6 +97,15 @@ class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
                           _controller.disableBackgroundMode();
                         },
                       ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.close,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          _controller.dispose();
+                        },
+                      ),
                     ],
                   ),
                 ),
