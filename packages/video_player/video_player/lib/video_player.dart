@@ -359,6 +359,16 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _videoPlayerPlatform.moveToPip(_textureId);
   }
 
+  /// Move current video in pip mode
+  Future<void> moveToBackgroundMode() async {
+    await _videoPlayerPlatform.moveToBackgroundMode(_textureId);
+  }
+
+  /// Move current video in pip mode
+  Future<void> disableBackgroundMode() async {
+    await _videoPlayerPlatform.disableBackgroundMode(_textureId);
+  }
+
   /// Starts playing the video.
   ///
   /// This method returns a future that completes as soon as the "play" command

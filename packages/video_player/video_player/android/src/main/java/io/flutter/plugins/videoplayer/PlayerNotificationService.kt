@@ -20,10 +20,9 @@ class PlayerNotificationService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        if (BackgroundModeManager.getInstance().player != null){
+        if (BackgroundModeManager.getInstance().player != null) {
             mPlayer = BackgroundModeManager.getInstance().player!!
-        }
-        else {
+        } else {
             stopSelf()
             return
         }
@@ -35,9 +34,6 @@ class PlayerNotificationService : Service() {
                 R.string.channel_desc,
                 notificationId,
                 object : PlayerNotificationManager.MediaDescriptionAdapter {
-
-
-
                     override fun createCurrentContentIntent(player: Player): PendingIntent? {
                         return null
 //                        val intent = Intent(context, AudioPlayActivity::class.java);
@@ -68,9 +64,7 @@ class PlayerNotificationService : Service() {
                             notificationId: Int,
                             notification: Notification,
                             onGoing: Boolean) {
-
                         startForeground(notificationId, notification)
-
                     }
 
                     override fun onNotificationCancelled(
@@ -82,7 +76,6 @@ class PlayerNotificationService : Service() {
 
                 }
         )
-        //attach player to playerNotificationManager
         playerNotificationManager.setPlayer(mPlayer)
     }
 

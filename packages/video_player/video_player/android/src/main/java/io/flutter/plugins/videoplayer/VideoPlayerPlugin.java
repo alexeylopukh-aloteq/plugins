@@ -205,6 +205,25 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi, Activit
     }
   }
 
+  @Override
+  public void disableBackgroundMode(TextureMessage arg) {
+    BackgroundModeManager.Companion.getInstance().setPlayer(null);
+    Intent intent = new Intent(appActivity, PlayerNotificationService.class);
+    appActivity.stopService(intent);
+  }
+
+  @Override
+  public void moveToBackgroundMode(TextureMessage arg) {
+    VideoPlayer player = videoPlayers.get(arg.getTextureId());
+    BackgroundModeManager.Companion.getInstance().setPlayer(player.getExoPlayer());
+    Intent intent = new Intent(appActivity, PlayerNotificationService.class);
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+      appActivity.startForegroundService(intent);
+    } else {
+      appActivity.startService(intent);
+    }
+  }
+
   public void play(TextureMessage arg) {
     VideoPlayer player = videoPlayers.get(arg.getTextureId());
     player.play();
