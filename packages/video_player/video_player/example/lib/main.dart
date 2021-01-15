@@ -35,9 +35,13 @@ class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
 
   @override
   void initState() {
+    initController();
     super.initState();
-    _controller = VideoPlayerController.asset('assets/Butterfly-209.mp4');
+  }
 
+  void initController() {
+    _controller = VideoPlayerController.network(
+        "https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4");
     _controller.addListener(() {
       setState(() {});
     });
@@ -103,7 +107,12 @@ class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
                           color: Colors.white,
                         ),
                         onPressed: () {
-                          _controller.dispose();
+                          if (_controller != null) {
+                            _controller.dispose();
+                            _controller = null;
+                          } else {
+                            initController();
+                          }
                         },
                       ),
                     ],

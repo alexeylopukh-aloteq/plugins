@@ -51,7 +51,7 @@ final public class VideoPlayer {
 
   private Surface surface;
 
-  private final TextureRegistry.SurfaceTextureEntry textureEntry;
+  final TextureRegistry.SurfaceTextureEntry textureEntry;
 
   private QueuingEventSink eventSink = new QueuingEventSink();
 
@@ -283,7 +283,9 @@ final public class VideoPlayer {
   }
 
   void dispose() {
-    if (isInitialized && !backgroundMode) {
+    if (backgroundMode)
+      return;
+    if (isInitialized) {
       exoPlayer.stop();
     }
     textureEntry.release();
@@ -291,7 +293,7 @@ final public class VideoPlayer {
     if (surface != null) {
       surface.release();
     }
-    if (exoPlayer != null && !backgroundMode) {
+    if (exoPlayer != null) {
       exoPlayer.release();
     }
   }

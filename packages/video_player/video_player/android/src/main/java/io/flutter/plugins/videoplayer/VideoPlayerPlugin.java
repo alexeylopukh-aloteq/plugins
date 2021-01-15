@@ -154,19 +154,24 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi, Activit
               null,
               options);
     } else {
-      player =
-          new VideoPlayer(
-              flutterState.applicationContext,
-              eventChannel,
-              handle,
-              arg.getUri(),
-              arg.getFormatHint(),
-              options);
+      VideoPlayer backgroundPlayer = BackgroundModeManager.Companion.getInstance().getPlayer();
+      if (backgroundPlayer != null
+              && backgroundPlayer.getExoPlayer().getCurrentMediaItem().mediaId.equals(arg.getUri())){
+        player = backgroundPlayer;
+      } else
+        player =
+            new VideoPlayer(
+                flutterState.applicationContext,
+                eventChannel,
+                handle,
+                arg.getUri(),
+                arg.getFormatHint(),
+                options);
     }
-    videoPlayers.put(handle.id(), player);
+    videoPlayers.put(player.textureEntry.id(), player);
 
     TextureMessage result = new TextureMessage();
-    result.setTextureId(handle.id());
+    result.setTextureId(player.textureEntry.id());
     return result;
   }
 
