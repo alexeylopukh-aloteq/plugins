@@ -280,6 +280,7 @@ final public class VideoPlayer {
           width = exoPlayer.getVideoFormat().height;
           height = exoPlayer.getVideoFormat().width;
         }
+        event.put("isBackgroundMode", backgroundMode);
         event.put("width", width);
         event.put("height", height);
       }

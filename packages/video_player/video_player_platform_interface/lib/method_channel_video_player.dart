@@ -118,6 +118,7 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
             eventType: VideoEventType.initialized,
             duration: Duration(milliseconds: map['duration']),
             size: Size(map['width']?.toDouble() ?? 0.0, map['height']?.toDouble() ?? 0.0),
+            isInBackground: map['isBackgroundMode'] ?? false,
           );
         case 'completed':
           return VideoEvent(
@@ -138,7 +139,7 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
           return VideoEvent(eventType: VideoEventType.playState, isPlaying: map['isPlaying']);
         case 'isBackgroundMode':
           return VideoEvent(
-              eventType: VideoEventType.backgroundMode, isPlaying: map['isBackgroundMode']);
+              eventType: VideoEventType.backgroundMode, isInBackground: map['isBackgroundMode']);
         default:
           return VideoEvent(eventType: VideoEventType.unknown);
       }

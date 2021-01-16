@@ -297,6 +297,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           value = value.copyWith(
             duration: event.duration,
             size: event.size,
+            backgroundMode: event.isInBackground ?? false
           );
           initializingCompleter.complete(null);
           _applyLooping();
