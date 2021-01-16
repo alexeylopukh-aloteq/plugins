@@ -6,6 +6,7 @@ import static com.google.android.exoplayer2.Player.REPEAT_MODE_OFF;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
+import android.util.Log;
 import android.view.Surface;
 import android.view.View;
 
@@ -178,6 +179,14 @@ final public class VideoPlayer {
         new EventListener() {
 
           @Override
+          public void onIsPlayingChanged(boolean isPlaying) {
+            Map<String, Object> event = new HashMap<>();
+            event.put("event", "isPlaying");
+            event.put("isPlaying", isPlaying);
+            eventSink.success(event);
+          }
+
+          @Override
           public void onPlaybackStateChanged(final int playbackState) {
             if (playbackState == Player.STATE_BUFFERING) {
               sendBufferingUpdate();
@@ -255,7 +264,7 @@ final public class VideoPlayer {
   }
 
   @SuppressWarnings("SuspiciousNameCombination")
-  private void sendInitialized() {
+  void sendInitialized() {
     if (isInitialized) {
       Map<String, Object> event = new HashMap<>();
       event.put("event", "initialized");

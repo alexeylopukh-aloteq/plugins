@@ -10,6 +10,7 @@ import android.app.RemoteAction;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
 import android.util.LongSparseArray;
 
 import androidx.annotation.NonNull;
@@ -158,6 +159,7 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi, Activit
       if (backgroundPlayer != null
               && backgroundPlayer.getExoPlayer().getCurrentMediaItem().mediaId.equals(arg.getUri())){
         player = backgroundPlayer;
+        new Handler().postDelayed(player::sendInitialized, 10);
       } else
         player =
             new VideoPlayer(
