@@ -234,6 +234,7 @@ class VideoEvent {
     this.duration,
     this.size,
     this.buffered,
+    this.isPlaying,
   });
 
   /// The type of the event.
@@ -243,6 +244,9 @@ class VideoEvent {
   ///
   /// Only used if [eventType] is [VideoEventType.initialized].
   final Duration duration;
+
+  /// Playing status
+  final isPlaying;
 
   /// Size of the video.
   ///
@@ -288,6 +292,9 @@ enum VideoEventType {
 
   /// The video stopped to buffer.
   bufferingEnd,
+
+  /// The video play status set
+  playState,
 
   /// An unknown event has been received.
   unknown,
