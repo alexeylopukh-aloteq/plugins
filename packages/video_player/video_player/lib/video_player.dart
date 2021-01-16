@@ -37,6 +37,7 @@ class VideoPlayerValue {
     this.isPlaying = false,
     this.isLooping = false,
     this.isBuffering = false,
+    this.backgroundMode = false,
     this.volume = 1.0,
     this.playbackSpeed = 1.0,
     this.errorDescription,
@@ -63,6 +64,8 @@ class VideoPlayerValue {
   /// This field will never be null. If there is no caption for the current
   /// [position], this will be an empty [Caption] object.
   final Caption caption;
+
+  final bool backgroundMode;
 
   /// The currently buffered ranges.
   final List<DurationRange> buffered;
@@ -123,6 +126,7 @@ class VideoPlayerValue {
     bool isPlaying,
     bool isLooping,
     bool isBuffering,
+    bool backgroundMode,
     double volume,
     double playbackSpeed,
     String errorDescription,
@@ -137,6 +141,7 @@ class VideoPlayerValue {
       isLooping: isLooping ?? this.isLooping,
       isBuffering: isBuffering ?? this.isBuffering,
       volume: volume ?? this.volume,
+      backgroundMode: backgroundMode ?? this.backgroundMode,
       playbackSpeed: playbackSpeed ?? this.playbackSpeed,
       errorDescription: errorDescription ?? this.errorDescription,
     );
@@ -313,7 +318,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           break;
         case VideoEventType.playState:
           value = value.copyWith(isPlaying: event.isPlaying);
-          print("isPlaying ${event.isPlaying}");
           break;
         case VideoEventType.unknown:
           break;
@@ -360,16 +364,25 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
   /// Move current video in pip mode
   Future<void> moveToPip() async {
+    value = value.copyWith(
+      backgroundMode: true,
+    );
     await _videoPlayerPlatform.moveToPip(_textureId);
   }
 
   /// Move current video in pip mode
   Future<void> moveToBackgroundMode() async {
+    value = value.copyWith(
+      backgroundMode: true,
+    );
     await _videoPlayerPlatform.moveToBackgroundMode(_textureId);
   }
 
   /// Move current video in pip mode
   Future<void> disableBackgroundMode() async {
+    value = value.copyWith(
+      backgroundMode: false,
+    );
     await _videoPlayerPlatform.disableBackgroundMode(_textureId);
   }
 

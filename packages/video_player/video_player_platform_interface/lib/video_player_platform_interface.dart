@@ -235,6 +235,7 @@ class VideoEvent {
     this.size,
     this.buffered,
     this.isPlaying,
+    this.isInBackground,
   });
 
   /// The type of the event.
@@ -246,7 +247,10 @@ class VideoEvent {
   final Duration duration;
 
   /// Playing status
-  final isPlaying;
+  final bool isPlaying;
+
+  /// Background mode
+  final bool isInBackground;
 
   /// Size of the video.
   ///
@@ -295,6 +299,9 @@ enum VideoEventType {
 
   /// The video play status set
   playState,
+
+  /// The video play status set
+  backgroundMode,
 
   /// An unknown event has been received.
   unknown,

@@ -136,6 +136,9 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
           return VideoEvent(eventType: VideoEventType.bufferingEnd);
         case 'isPlaying':
           return VideoEvent(eventType: VideoEventType.playState, isPlaying: map['isPlaying']);
+        case 'isBackgroundMode':
+          return VideoEvent(
+              eventType: VideoEventType.backgroundMode, isPlaying: map['isBackgroundMode']);
         default:
           return VideoEvent(eventType: VideoEventType.unknown);
       }
