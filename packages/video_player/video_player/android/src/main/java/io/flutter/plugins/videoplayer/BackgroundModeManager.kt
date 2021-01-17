@@ -21,7 +21,6 @@ class BackgroundModeManager private constructor() {
         set(value) {
             if (value == null){
                 field?.backgroundMode = false
-                field?.dispose()
             } else {
                 value.backgroundMode = true
             }
