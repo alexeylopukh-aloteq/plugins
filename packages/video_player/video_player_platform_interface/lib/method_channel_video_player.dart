@@ -43,6 +43,10 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
         break;
     }
 
+    message.title = dataSource.title;
+    message.description = dataSource.description;
+    message.previewUrl = dataSource.previewUrl;
+
     TextureMessage response = await _api.create(message);
     return response.textureId;
   }
