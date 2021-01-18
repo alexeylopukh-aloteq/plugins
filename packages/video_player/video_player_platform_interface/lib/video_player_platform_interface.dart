@@ -64,6 +64,11 @@ abstract class VideoPlayerPlatform {
     throw UnimplementedError('dispose() has not been implemented.');
   }
 
+  /// Clears one video.
+  Future<void> openFullScreenMode(int textureId) {
+    throw UnimplementedError('openFullScreenMode() has not been implemented.');
+  }
+
   /// Creates an instance of a video player and returns its textureId.
   Future<int> create(DataSource dataSource) {
     throw UnimplementedError('create() has not been implemented.');

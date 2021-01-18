@@ -397,6 +397,26 @@ class VideoPlayerApi {
     }
   }
 
+  Future<void> openFullScreenMode(TextureMessage arg) async {
+    final Map<dynamic, dynamic> requestMap = arg._toMap();
+    const BasicMessageChannel<dynamic> channel = BasicMessageChannel<dynamic>(
+        'dev.flutter.pigeon.VideoPlayerApi.openFullScreenMode', StandardMessageCodec());
+
+    final Map<dynamic, dynamic> replyMap = await channel.send(requestMap);
+    if (replyMap == null) {
+      throw PlatformException(
+          code: 'channel-error',
+          message: 'Unable to establish connection on channel.',
+          details: null);
+    } else if (replyMap['error'] != null) {
+      final Map<dynamic, dynamic> error = replyMap['error'];
+      throw PlatformException(
+          code: error['code'], message: error['message'], details: error['details']);
+    } else {
+      // noop
+    }
+  }
+
   Future<void> disableBackgroundMode(TextureMessage arg) async {
     final Map<dynamic, dynamic> requestMap = arg._toMap();
     const BasicMessageChannel<dynamic> channel = BasicMessageChannel<dynamic>(
