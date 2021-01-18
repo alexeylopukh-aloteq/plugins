@@ -63,6 +63,11 @@ final public class VideoPlayer {
   private final VideoPlayerOptions options;
 
   Boolean backgroundMode = false;
+  
+  public final String title;
+  public final String description;
+  public final String previewUrl;
+  
 
   VideoPlayer(
       Context context,
@@ -70,10 +75,16 @@ final public class VideoPlayer {
       TextureRegistry.SurfaceTextureEntry textureEntry,
       String dataSource,
       String formatHint,
-      VideoPlayerOptions options) {
+      VideoPlayerOptions options,
+      String title,
+      String description,
+      String previewUrl) {
     this.eventChannel = eventChannel;
     this.textureEntry = textureEntry;
     this.options = options;
+    this.title = title;
+    this.description = description;
+    this.previewUrl = previewUrl;
 
     exoPlayer = new SimpleExoPlayer.Builder(context).build();
 

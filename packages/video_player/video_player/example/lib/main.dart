@@ -41,7 +41,19 @@ class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
 
   void initController() {
     _controller = VideoPlayerController.network(
-        "https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4");
+        "https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4",
+        "Huge Apple 2021 Rumor Reactions!",
+        '''Folding iPhones? The Return of Magsafe? Mac Pros with Apple Silicon? There's a lot to unpack!
+
+Mark Gurman:
+https://www.bloomberg.com/news/articl...
+https://www.bloomberg.com/news/articl...
+https://www.bloomberg.com/news/articl...
+
+Matte black aluminum MacBooks: https://www.macrumors.com/2020/12/04/...
+
+On the Portless iPhone 13: https://youtu.be/Qfmeb2e_kb4''',
+        "https://i.ytimg.com/vi/1l0aosZHSDA/hqdefault.jpg?sqp=-oaymwEiCNIBEHZIWvKriqkDFQgBFQAAAAAYASUAAMhCPQCAokN4AQ==&rs=AOn4CLB170Bqvy9_8Ut3kSUGIOrFaeeIgw");
     _controller.addListener(() {
       setState(() {});
     });

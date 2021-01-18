@@ -153,7 +153,7 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi, Activit
               handle,
               "asset:///" + assetLookupKey,
               null,
-              options);
+              options, arg.title, arg.description, arg.previewUrl);
     } else {
       VideoPlayer backgroundPlayer = BackgroundModeManager.Companion.getInstance().getPlayer();
       if (backgroundPlayer != null
@@ -168,7 +168,7 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi, Activit
                 handle,
                 arg.getUri(),
                 arg.getFormatHint(),
-                options);
+                options, arg.title, arg.description, arg.previewUrl);
     }
     videoPlayers.put(player.textureEntry.id(), player);
 

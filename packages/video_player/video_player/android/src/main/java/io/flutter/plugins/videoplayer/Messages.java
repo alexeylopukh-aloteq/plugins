@@ -79,6 +79,10 @@ public class Messages {
       return formatHint;
     }
 
+    public String title;
+    public String description;
+    public String previewUrl;
+
     public void setFormatHint(String setterArg) {
       this.formatHint = setterArg;
     }
@@ -89,6 +93,9 @@ public class Messages {
       toMapResult.put("uri", uri);
       toMapResult.put("packageName", packageName);
       toMapResult.put("formatHint", formatHint);
+      toMapResult.put("title", title);
+      toMapResult.put("description", description);
+      toMapResult.put("previewUrl", previewUrl);
       return toMapResult;
     }
 
@@ -102,6 +109,12 @@ public class Messages {
       fromMapResult.packageName = (String) packageName;
       Object formatHint = map.get("formatHint");
       fromMapResult.formatHint = (String) formatHint;
+      Object title = map.get("title");
+      fromMapResult.title = (String) title;
+      Object description = map.get("description");
+      fromMapResult.description = (String) description;
+      Object previewUrl = map.get("previewUrl");
+      fromMapResult.previewUrl = (String) previewUrl;
       return fromMapResult;
     }
   }

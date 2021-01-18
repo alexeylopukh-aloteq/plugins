@@ -49,7 +49,7 @@ class PlayerNotificationService : Service() {
             return
         }
         startForeground(notificationId, createNotification().build())
-        applyImageUrl("https://pbs.twimg.com/profile_images/1310973573931171845/X1-iVrIv_400x400.jpg")
+        applyImageUrl(videoPlayer.previewUrl)
         setupBroadcastReceiver()
     }
 
@@ -88,9 +88,9 @@ class PlayerNotificationService : Service() {
                 .setSmallIcon(R.drawable.exo_controls_play)
                 .setDeleteIntent(PendingIntent.getBroadcast(applicationContext, notificationId,
                         Intent(ACTION_CLOSE), FLAG_UPDATE_CURRENT))
-        builder.setContentTitle("Title")
-        builder.setContentText("Text asdjoais dioajsoi djasoi lol")
-        builder.setTicker("Ticker")
+        builder.setContentTitle(videoPlayer.title)
+        builder.setContentText(videoPlayer.description)
+        builder.setTicker(videoPlayer.description)
         builder.setLargeIcon(videoBitmap)
 
         updateActions(builder)
