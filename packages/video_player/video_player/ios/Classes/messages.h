@@ -54,6 +54,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, strong, nullable) NSNumber *textureId;
 @end
 
+@interface FLTOpenFullScreen : NSObject
+@property(nonatomic, strong, nullable) NSNumber *textureId;
+
+@end
+
+
 @protocol FLTVideoPlayerApi
 - (void)initialize:(FlutterError *_Nullable *_Nonnull)error;
 - (nullable FLTTextureMessage *)create:(FLTCreateMessage *)input
@@ -72,6 +78,7 @@ NS_ASSUME_NONNULL_BEGIN
                    error:(FlutterError *_Nullable *_Nonnull)error;
 
 -(void)moveToPip:(FLTMoveToPip *)input error:(FlutterError *_Nullable *_Nonnull)error;
+-(void)openFullScreen:(FLTOpenFullScreen *)input error:(FlutterError *_Nullable *_Nonnull)error;
 @end
 
 extern void FLTVideoPlayerApiSetup(id<FlutterBinaryMessenger> binaryMessenger,

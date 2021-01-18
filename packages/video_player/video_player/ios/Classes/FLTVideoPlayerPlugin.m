@@ -36,7 +36,7 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 }
 @end
 
-@interface FLTVideoPlayer : NSObject <FlutterTexture, FlutterStreamHandler, AVPictureInPictureControllerDelegate>
+@interface FLTVideoPlayer : NSObject <FlutterTexture, FlutterStreamHandler, AVPlayerViewControllerDelegate>
 @property(readonly, nonatomic) AVPlayer* player;
 @property(readonly, nonatomic) AVPlayerItemVideoOutput* videoOutput;
 @property(readonly, nonatomic) CADisplayLink* displayLink;
@@ -48,7 +48,7 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 @property(nonatomic) bool isLooping;
 @property(nonatomic, readonly) bool isInitialized;
 @property(nonatomic) AVPlayerLayer *playerLayer;
-@property(nonatomic) AVPictureInPictureController *pipController;
+@property(nonatomic) AVPlayerViewController *playerViewController;
 @property(nonatomic) bool _pictureInPicture;
 
 
@@ -346,7 +346,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 
 -(void)moveToPip {
-    [self usePlayerLayer:CGRectMake(100, 100, 340, 290)];
+  //  [self usePlayerLayer:CGRectMake(100, 100, 340, 290)];
     
     /* AVPlayerLayer *playerLayer = [AVPlayerLayer playerLayerWithPlayer: _player];
     [playerLayer setFrame:CGRectMake(100, 100, 360, 180)];
@@ -365,49 +365,64 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
   }
 }
 
+- (void)moveToFullScreen {
+    self.playerViewController = [[AVPlayerViewController alloc]init];
+    self.playerViewController.player = _player;
+    self.playerViewController.delegate = self;
+    UIViewController* vc = [[[UIApplication sharedApplication] keyWindow] rootViewController];
+    [vc presentViewController:self.playerViewController animated:YES completion:nil];
+    
+}
 
 - (void)preparePipController {
     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
     [[AVAudioSession sharedInstance] setActive: YES error: nil];
     [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
-    if (!self.pipController && self.playerLayer && [AVPictureInPictureController isPictureInPictureSupported]) {
-        self.pipController = [[AVPictureInPictureController alloc] initWithPlayerLayer:self.playerLayer];
-        self.pipController.delegate = self;
-    }
+//    if (!self.pipController && self.playerLayer && [AVPictureInPictureController isPictureInPictureSupported]) {
+//        self.pipController = [[AVPictureInPictureController alloc] initWithPlayerLayer:self.playerLayer];
+//        self.pipController.delegate = self;
+//    }
 }
 
-- (void)usePlayerLayer: (CGRect) frame
-{
-    if( _player )
-    {
-        self.playerLayer = [AVPlayerLayer playerLayerWithPlayer:_player];
-        UIViewController* vc = [[[UIApplication sharedApplication] keyWindow] rootViewController];
-      //  self.playerLayer.frame = frame;
-        self.playerLayer.needsDisplayOnBoundsChange = YES;
-        [vc.view.layer addSublayer:self.playerLayer];
-        vc.view.layer.needsDisplayOnBoundsChange = YES;
-        if (@available(iOS 9.0, *)) {
-            self.pipController = NULL;
-        }
-        [self preparePipController];
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)),
-        dispatch_get_main_queue(), ^{
-            if (self.pipController  && ![self.pipController isPictureInPictureActive]) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self.pipController startPictureInPicture];
-                });
-            } else if (self.pipController && [self.pipController isPictureInPictureActive]) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self.pipController stopPictureInPicture];
-                });
-            }
-          //  [self setPictureInPicture:true];
-       });
-    }
-}
+//- (void)usePlayerLayer: (CGRect) frame
+//{
+//    if( _player )
+//    {
+//        self.playerLayer = [AVPlayerLayer playerLayerWithPlayer:_player];
+//        UIViewController* vc = [[[UIApplication sharedApplication] keyWindow] rootViewController];
+//      //  self.playerLayer.frame = frame;
+//        self.playerLayer.needsDisplayOnBoundsChange = YES;
+//        [vc.view.layer insertSublayer:self.playerLayer atIndex:0];
+//        vc.view.layer.needsDisplayOnBoundsChange = YES;
+//
+//        if (@available(iOS 9.0, *)) {
+//            self.pipController = NULL;
+//        }
+//        [self preparePipController];
+//        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)),
+//        dispatch_get_main_queue(), ^{
+//            if (self.pipController  && ![self.pipController isPictureInPictureActive]) {
+//                dispatch_async(dispatch_get_main_queue(), ^{
+//                    [self.pipController startPictureInPicture];
+//                });
+//            } else if (self.pipController && [self.pipController isPictureInPictureActive]) {
+//                dispatch_async(dispatch_get_main_queue(), ^{
+//                    [self.pipController stopPictureInPicture];
+//                });
+//            }
+//          //  [self setPictureInPicture:true];
+//       });
+//    }
+//}
 
 
 //PIP controller delegate
+-(void)playerViewControllerWillStartPictureInPicture:(AVPlayerViewController *)playerViewController {
+    
+}
+-(void)playerViewController:(AVPlayerViewController *)playerViewController restoreUserInterfaceForPictureInPictureStopWithCompletionHandler:(void (^)(BOOL))completionHandler {
+    
+}
 
 - (void)pictureInPictureControllerDidStopPictureInPicture:(AVPictureInPictureController *)pictureInPictureController  API_AVAILABLE(ios(9.0)){
     if (_eventSink != nil) {
@@ -723,6 +738,10 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 -(void)moveToPip:(FLTMoveToPip *)input error:(FlutterError *_Nullable *_Nonnull)error {
     FLTVideoPlayer *player = _players[input.textureId];
     [player moveToPip];
+}
+- (void)openFullScreen:(FLTOpenFullScreen *)input error:(FlutterError * _Nullable __autoreleasing *)error {
+    FLTVideoPlayer *player = _players[input.textureId];
+    [player moveToFullScreen];
 }
 
 

@@ -219,6 +219,26 @@ static NSDictionary *wrapResult(NSDictionary *result, FlutterError *error) {
 
 @end
 
+
+@implementation FLTOpenFullScreen
++ (FLTMoveToPip *)fromMap:(NSDictionary *)dict {
+    FLTMoveToPip *result = [[FLTMoveToPip alloc] init];
+    result.textureId = dict[@"textureId"];
+    if ((NSNull *)result.textureId == [NSNull null]) {
+        result.textureId = nil;
+    }
+    return result;
+}
+- (NSDictionary *)toMap {
+    return [NSDictionary
+            dictionaryWithObjectsAndKeys:(self.textureId != nil ? self.textureId : [NSNull null]),
+            @"textureId",nil];
+    
+}
+
+
+@end
+
 void FLTVideoPlayerApiSetup(id<FlutterBinaryMessenger> binaryMessenger, id<FLTVideoPlayerApi> api) {
     {
         FlutterBasicMessageChannel *channel = [FlutterBasicMessageChannel
@@ -388,6 +408,23 @@ void FLTVideoPlayerApiSetup(id<FlutterBinaryMessenger> binaryMessenger, id<FLTVi
     {
         FlutterBasicMessageChannel *channel = [FlutterBasicMessageChannel
                                                messageChannelWithName:@"dev.flutter.pigeon.VideoPlayerApi.moveToPip"
+                                               binaryMessenger:binaryMessenger];
+        if (api) {
+            [channel setMessageHandler:^(id _Nullable message, FlutterReply callback) {
+                FlutterError *error;
+                FLTMoveToPip *input = [FLTMoveToPip fromMap:message];
+                [api moveToPip:input error:&error];
+                callback(wrapResult(nil, error));
+            }];
+        } else {
+            [channel setMessageHandler:nil];
+        }
+    }
+    
+    
+    {
+        FlutterBasicMessageChannel *channel = [FlutterBasicMessageChannel
+                                               messageChannelWithName:@"dev.flutter.pigeon.VideoPlayerApi.openFullScreenMode"
                                                binaryMessenger:binaryMessenger];
         if (api) {
             [channel setMessageHandler:^(id _Nullable message, FlutterReply callback) {
