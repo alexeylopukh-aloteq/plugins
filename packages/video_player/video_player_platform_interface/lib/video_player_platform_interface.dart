@@ -165,6 +165,9 @@ class DataSource {
     this.formatHint,
     this.asset,
     this.package,
+    @required this.title,
+    @required this.description,
+    @required this.previewUrl,
   });
 
   /// The way in which the video was originally loaded.
@@ -189,6 +192,15 @@ class DataSource {
   /// The package that the asset was loaded from. Only set for
   /// [DataSourceType.asset] videos.
   final String package;
+
+  /// Title for background player
+  final String title;
+
+  /// Description for background player
+  final String description;
+
+  /// PreviewUrl for background player
+  final String previewUrl;
 }
 
 /// The way in which the video was originally loaded.

@@ -295,10 +295,9 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       switch (event.eventType) {
         case VideoEventType.initialized:
           value = value.copyWith(
-            duration: event.duration,
-            size: event.size,
-            backgroundMode: event.isInBackground ?? false
-          );
+              duration: event.duration,
+              size: event.size,
+              backgroundMode: event.isInBackground ?? false);
           initializingCompleter.complete(null);
           _applyLooping();
           _applyVolume();
@@ -320,6 +319,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         case VideoEventType.playState:
           value = value.copyWith(isPlaying: event.isPlaying);
           break;
+        case VideoEventType.backgroundMode:
         case VideoEventType.unknown:
           break;
       }
