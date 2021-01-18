@@ -429,8 +429,8 @@ void FLTVideoPlayerApiSetup(id<FlutterBinaryMessenger> binaryMessenger, id<FLTVi
         if (api) {
             [channel setMessageHandler:^(id _Nullable message, FlutterReply callback) {
                 FlutterError *error;
-                FLTMoveToPip *input = [FLTMoveToPip fromMap:message];
-                [api moveToPip:input error:&error];
+                FLTOpenFullScreen *input = [FLTOpenFullScreen fromMap:message];
+                [api openFullScreen:input error:&error];
                 callback(wrapResult(nil, error));
             }];
         } else {
