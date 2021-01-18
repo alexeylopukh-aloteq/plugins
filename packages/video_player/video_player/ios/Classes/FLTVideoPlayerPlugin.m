@@ -6,6 +6,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import <GLKit/GLKit.h>
 #import "messages.h"
+#import <AVKit/AVKit.h>
 
 #if !__has_feature(objc_arc)
 #error Code Requires ARC.
@@ -35,7 +36,7 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 }
 @end
 
-@interface FLTVideoPlayer : NSObject <FlutterTexture, FlutterStreamHandler>
+@interface FLTVideoPlayer : NSObject <FlutterTexture, FlutterStreamHandler, AVPictureInPictureControllerDelegate>
 @property(readonly, nonatomic) AVPlayer* player;
 @property(readonly, nonatomic) AVPlayerItemVideoOutput* videoOutput;
 @property(readonly, nonatomic) CADisplayLink* displayLink;
@@ -46,6 +47,10 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 @property(nonatomic, readonly) bool isPlaying;
 @property(nonatomic) bool isLooping;
 @property(nonatomic, readonly) bool isInitialized;
+@property(nonatomic) AVPlayerLayer *playerLayer;
+@property(nonatomic) AVPictureInPictureController *pipController;
+
+
 - (instancetype)initWithURL:(NSURL*)url frameUpdater:(FLTFrameUpdater*)frameUpdater;
 - (void)play;
 - (void)pause;
@@ -229,6 +234,8 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
   _player = [AVPlayer playerWithPlayerItem:item];
   _player.actionAtItemEnd = AVPlayerActionAtItemEndNone;
 
+   
+    
   [self createVideoOutputAndDisplayLink:frameUpdater];
 
   [self addObservers:item];
@@ -331,6 +338,103 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
   _isPlaying = true;
   [self updatePlayingState];
 }
+
+
+
+-(void)moveToPip {
+    [self usePlayerLayer:CGRectMake(100, 100, 340, 290)];
+    
+    /* AVPlayerLayer *playerLayer = [AVPlayerLayer playerLayerWithPlayer: _player];
+    [playerLayer setFrame:CGRectMake(100, 100, 360, 180)];
+    [playerLayer setVideoGravity:AVLayerVideoGravityResize];
+    AVPictureInPictureController *controller = [[AVPictureInPictureController alloc]initWithPlayerLayer:playerLayer];
+    controller.delegate = self;
+    [controller startPictureInPicture];*/
+
+}
+
+- (void)preparePipController {
+    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
+    [[AVAudioSession sharedInstance] setActive: YES error: nil];
+    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
+    if (!self.pipController && self.playerLayer && [AVPictureInPictureController isPictureInPictureSupported]) {
+        self.pipController = [[AVPictureInPictureController alloc] initWithPlayerLayer:self.playerLayer];
+        self.pipController.delegate = self;
+    }
+}
+
+- (void)usePlayerLayer: (CGRect) frame
+{
+    if( _player )
+    {
+        self.playerLayer = [AVPlayerLayer playerLayerWithPlayer:_player];
+        UIViewController* vc = [[[UIApplication sharedApplication] keyWindow] rootViewController];
+        self.playerLayer.frame = frame;
+        self.playerLayer.needsDisplayOnBoundsChange = YES;
+        [vc.view.layer addSublayer:self.playerLayer];
+        vc.view.layer.needsDisplayOnBoundsChange = YES;
+        if (@available(iOS 9.0, *)) {
+            self.pipController = NULL;
+        }
+        [self preparePipController];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)),
+        dispatch_get_main_queue(), ^{
+            if (self.pipController  && ![self.pipController isPictureInPictureActive]) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self.pipController startPictureInPicture];
+                });
+            } else if (self.pipController && [self.pipController isPictureInPictureActive]) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self.pipController stopPictureInPicture];
+                });
+            }
+          //  [self setPictureInPicture:true];
+       });
+    }
+}
+
+
+//PIP controller delegate
+
+- (void)pictureInPictureControllerDidStopPictureInPicture:(AVPictureInPictureController *)pictureInPictureController  API_AVAILABLE(ios(9.0)){
+    [self removePlayerLayer];
+    if (_eventSink != nil) {
+      _eventSink(@{@"event" : @"stoppedPiP"});
+    }
+}
+
+- (void)pictureInPictureControllerDidStartPictureInPicture:(AVPictureInPictureController *)pictureInPictureController  API_AVAILABLE(ios(9.0)){
+    if (_eventSink != nil) {
+      _eventSink(@{@"event" : @"startingPiP"});
+    }
+}
+
+- (void)pictureInPictureControllerWillStopPictureInPicture:(AVPictureInPictureController *)pictureInPictureController  API_AVAILABLE(ios(9.0)){
+
+}
+
+- (void)pictureInPictureControllerWillStartPictureInPicture:(AVPictureInPictureController *)pictureInPictureController {
+
+}
+
+- (void)pictureInPictureController:(AVPictureInPictureController *)pictureInPictureController failedToStartPictureInPictureWithError:(NSError *)error {
+
+}
+
+- (void)pictureInPictureController:(AVPictureInPictureController *)pictureInPictureController restoreUserInterfaceForPictureInPictureStopWithCompletionHandler:(void (^)(BOOL))completionHandler {
+//  NSAssert(_restoreUserInterfaceForPIPStopCompletionHandler == NULL, @"restoreUserInterfaceForPIPStopCompletionHandler was not called after picture in picture was exited.");
+//  if (self.onRestoreUserInterfaceForPictureInPictureStop) {
+//    self.onRestoreUserInterfaceForPictureInPictureStop(@{});
+//  }
+  //_restoreUserInterfaceForPIPStopCompletionHandler = completionHandler;
+}
+
+- (void)removePlayerLayer
+{
+    [self.playerLayer removeFromSuperlayer];
+    self.playerLayer = nil;
+}
+
 
 - (void)pause {
   _isPlaying = false;
@@ -500,6 +604,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 - (void)initialize:(FlutterError* __autoreleasing*)error {
   // Allow audio playback when the Ring/Silent switch is set to silent
   [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
+    [[AVAudioSession sharedInstance]setActive:YES error:nil];
 
   for (NSNumber* textureId in _players) {
     [_registry unregisterTexture:[textureId unsignedIntegerValue]];
@@ -599,5 +704,11 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
   }
 }
+
+-(void)moveToPip:(FLTMoveToPip *)input error:(FlutterError *_Nullable *_Nonnull)error {
+    FLTVideoPlayer *player = _players[input.textureId];
+    [player moveToPip];
+}
+
 
 @end

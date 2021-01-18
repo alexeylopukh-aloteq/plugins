@@ -50,6 +50,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, strong, nullable) NSNumber *mixWithOthers;
 @end
 
+@interface FLTMoveToPip : NSObject
+@property(nonatomic, strong, nullable) NSNumber *textureId;
+@end
+
 @protocol FLTVideoPlayerApi
 - (void)initialize:(FlutterError *_Nullable *_Nonnull)error;
 - (nullable FLTTextureMessage *)create:(FLTCreateMessage *)input
@@ -66,6 +70,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)pause:(FLTTextureMessage *)input error:(FlutterError *_Nullable *_Nonnull)error;
 - (void)setMixWithOthers:(FLTMixWithOthersMessage *)input
                    error:(FlutterError *_Nullable *_Nonnull)error;
+
+-(void)moveToPip:(FLTMoveToPip *)input error:(FlutterError *_Nullable *_Nonnull)error;
 @end
 
 extern void FLTVideoPlayerApiSetup(id<FlutterBinaryMessenger> binaryMessenger,
