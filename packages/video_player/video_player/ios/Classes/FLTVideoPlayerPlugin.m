@@ -49,6 +49,8 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 @property(nonatomic, readonly) bool isInitialized;
 @property(nonatomic) AVPlayerLayer *playerLayer;
 @property(nonatomic) AVPictureInPictureController *pipController;
+@property(nonatomic) bool _pictureInPicture;
+
 
 
 - (instancetype)initWithURL:(NSURL*)url frameUpdater:(FLTFrameUpdater*)frameUpdater;
@@ -63,6 +65,8 @@ static void* statusContext = &statusContext;
 static void* playbackLikelyToKeepUpContext = &playbackLikelyToKeepUpContext;
 static void* playbackBufferEmptyContext = &playbackBufferEmptyContext;
 static void* playbackBufferFullContext = &playbackBufferFullContext;
+void (^__strong _Nonnull _restoreUserInterfaceForPIPStopCompletionHandler)(BOOL);
+
 
 @implementation FLTVideoPlayer
 - (instancetype)initWithAsset:(NSString*)asset frameUpdater:(FLTFrameUpdater*)frameUpdater {
@@ -353,6 +357,15 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 }
 
+- (void)setRestoreUserInterfaceForPIPStopCompletionHandler:(BOOL)restore
+{
+  if (_restoreUserInterfaceForPIPStopCompletionHandler != NULL) {
+    _restoreUserInterfaceForPIPStopCompletionHandler(restore);
+    _restoreUserInterfaceForPIPStopCompletionHandler = NULL;
+  }
+}
+
+
 - (void)preparePipController {
     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
     [[AVAudioSession sharedInstance] setActive: YES error: nil];
@@ -369,7 +382,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     {
         self.playerLayer = [AVPlayerLayer playerLayerWithPlayer:_player];
         UIViewController* vc = [[[UIApplication sharedApplication] keyWindow] rootViewController];
-        self.playerLayer.frame = frame;
+      //  self.playerLayer.frame = frame;
         self.playerLayer.needsDisplayOnBoundsChange = YES;
         [vc.view.layer addSublayer:self.playerLayer];
         vc.view.layer.needsDisplayOnBoundsChange = YES;
@@ -397,7 +410,6 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 //PIP controller delegate
 
 - (void)pictureInPictureControllerDidStopPictureInPicture:(AVPictureInPictureController *)pictureInPictureController  API_AVAILABLE(ios(9.0)){
-    [self removePlayerLayer];
     if (_eventSink != nil) {
       _eventSink(@{@"event" : @"stoppedPiP"});
     }
@@ -427,6 +439,9 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 //    self.onRestoreUserInterfaceForPictureInPictureStop(@{});
 //  }
   //_restoreUserInterfaceForPIPStopCompletionHandler = completionHandler;
+//    [self.pipController stopPictureInPicture];
+//    self.pipController = nil;
+    completionHandler(YES);
 }
 
 - (void)removePlayerLayer
@@ -437,8 +452,8 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 
 - (void)pause {
-  _isPlaying = false;
-  [self updatePlayingState];
+ // _isPlaying = false;
+ // [self updatePlayingState];
 }
 
 - (int64_t)position {
