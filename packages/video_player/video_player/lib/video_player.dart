@@ -382,6 +382,11 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     super.dispose();
   }
 
+  /// Open fullscreen mode
+  Future<void> openFullScreenMode() async {
+    await _videoPlayerPlatform.openFullScreenMode(_textureId);
+  }
+
   /// Move current video in pip mode
   Future<void> moveToPip() async {
     value = value.copyWith(
