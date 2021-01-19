@@ -1,30 +1,40 @@
 package io.flutter.plugins.videoplayer
 
 import android.annotation.SuppressLint
-import android.app.NotificationManager
-import android.app.PendingIntent
+import android.app.*
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
-import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
+import android.os.Build
+import android.os.Handler
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.annotation.DrawableRes
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
+import io.flutter.embedding.engine.systemchannels.SettingsChannel.CHANNEL_NAME
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.net.URL
 
+
+private var NOTIFICATION_ID = 1
+private var CHANNEL_ID = "VideoPlayerChannelId"
 
 class PlayerNotificationService : Service() {
 
@@ -33,14 +43,18 @@ class PlayerNotificationService : Service() {
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var sessionConnector: MediaSessionConnector
     private lateinit var notificationManager: NotificationManager
+    private lateinit var audioManager: AudioManager
+    private lateinit var audioFocusRequest: AudioFocusRequest
 
-    private var notificationId = 123
-    private var channelId = "channelId"
+
     private var videoBitmap: Bitmap? = null
     private lateinit var broadcastReceiver: BroadcastReceiver
 
+    private var finish = false
+
     override fun onCreate() {
         super.onCreate()
+        Log.d(DEBUG_TAG, "onCreate()")
         if (BackgroundModeManager.getInstance().player != null) {
             videoPlayer = BackgroundModeManager.getInstance().player!!
             exoPlayer = videoPlayer.exoPlayer
@@ -48,14 +62,42 @@ class PlayerNotificationService : Service() {
             stopSelf()
             return
         }
-        startForeground(notificationId, createNotification().build())
+        Log.d(DEBUG_TAG, "start foreground")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            initAudioFocus()
+        }
+        initNotificationManager()
+        startForeground(NOTIFICATION_ID, createNotification().build())
         applyImageUrl(videoPlayer.previewUrl)
         setupBroadcastReceiver()
+        exoPlayer.addListener(
+                object : Player.EventListener {
+                    override fun onIsPlayingChanged(isPlaying: Boolean) {
+                        if (isPlaying && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            audioManager.requestAudioFocus(audioFocusRequest)
+                        }
+                        updateNotification()
+                    }
+
+
+                    override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+                        Log.d(DEBUG_TAG, playbackState.toString())
+                        if (playbackState == Player.STATE_IDLE) {
+                            Log.d(DEBUG_TAG, "STATE_IDLE")
+                            stopSelf()
+                        }
+                    }
+                })
     }
 
-    private fun createNotification() : NotificationCompat.Builder{
-        notificationManager = getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
-        mediaSession = MediaSessionCompat(applicationContext, "PlayerNotificationService")
+    private fun initNotificationManager(){
+        notificationManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getSystemService(NotificationManager::class.java)
+        } else {
+            getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        }
+
+        mediaSession = MediaSessionCompat(this, "PlayerNotificationService")
         mediaSession.setFlags(
                 MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
                         MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
@@ -73,37 +115,56 @@ class PlayerNotificationService : Service() {
 
         sessionConnector = MediaSessionConnector(mediaSession)
         sessionConnector.setPlayer(exoPlayer)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            createNotificationChannel()
+        }
+    }
 
-        val builder: NotificationCompat.Builder = NotificationCompat.Builder(applicationContext,
-                channelId)
+    private fun createNotification() : NotificationCompat.Builder{
+        val builder: NotificationCompat.Builder = NotificationCompat.Builder(this,
+                CHANNEL_ID)
 
         val style = androidx.media.app.NotificationCompat.MediaStyle()
         style.setShowActionsInCompactView(0)
+        style.setShowCancelButton(true)
+        style.setCancelButtonIntent(PendingIntent.getBroadcast(this, NOTIFICATION_ID,
+                Intent(ACTION_CLOSE), FLAG_UPDATE_CURRENT))
         builder.setStyle(style
                 .setMediaSession(mediaSession.sessionToken))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
-                .setShowWhen(true)
+                .setShowWhen(false)
+                .setOngoing(true)
+                .setAutoCancel(true)
                 .setSmallIcon(R.drawable.exo_controls_play)
-                .setDeleteIntent(PendingIntent.getBroadcast(applicationContext, notificationId,
+                .setDeleteIntent(PendingIntent.getBroadcast(this, NOTIFICATION_ID,
                         Intent(ACTION_CLOSE), FLAG_UPDATE_CURRENT))
         builder.setContentTitle(videoPlayer.title)
         builder.setContentText(videoPlayer.description)
-        builder.setTicker(videoPlayer.description)
+        builder.setSubText(videoPlayer.title)
         builder.setLargeIcon(videoBitmap)
 
         updateActions(builder)
         return builder
     }
 
-    fun applyImageUrl(
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createNotificationChannel(){
+        val serviceChannel = NotificationChannel(
+                CHANNEL_ID,
+                CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_DEFAULT
+        )
+        notificationManager.createNotificationChannel(serviceChannel)
+    }
+
+    private fun applyImageUrl(
             imageUrl: String
     ) = runBlocking {
-        val url = URL(imageUrl)
-
         withContext(Dispatchers.IO) {
             try {
+                val url = URL(imageUrl)
                 val input = url.openStream()
                 BitmapFactory.decodeStream(input)
             } catch (e: IOException) {
@@ -116,15 +177,17 @@ class PlayerNotificationService : Service() {
     }
 
     private fun updateNotification(){
+        if (finish)
+            return
         val notification = createNotification()
-        notificationManager.notify(notificationId, notification.build())
+        notificationManager.notify(NOTIFICATION_ID, notification.build())
     }
 
     private fun onBroadcastReceived(intent: Intent?) {
         if (intent == null || intent.action == null) {
             return
         }
-        Log.d(DUBUG_TAG, "onBroadcastReceived() called with: intent = [$intent]")
+        Log.d(DEBUG_TAG, "onBroadcastReceived() called with: intent = [$intent]")
         when (intent.action) {
             ACTION_CLOSE -> {
                 videoPlayer.pause()
@@ -134,6 +197,9 @@ class PlayerNotificationService : Service() {
                 if (exoPlayer.isPlaying)
                     videoPlayer.pause()
                 else videoPlayer.play()
+            }
+            ACTION_UPDATE_NOTIFICATION -> {
+                updateNotification()
             }
         }
         updateNotification()
@@ -149,16 +215,17 @@ class PlayerNotificationService : Service() {
         val intentFilter = IntentFilter()
         intentFilter.addAction(ACTION_CLOSE)
         intentFilter.addAction(ACTION_PLAY_PAUSE)
-        applicationContext.registerReceiver(broadcastReceiver, intentFilter)
+        intentFilter.addAction(ACTION_UPDATE_NOTIFICATION)
+        this.registerReceiver(broadcastReceiver, intentFilter)
     }
 
     private fun unregisterBroadcastReceiver() {
         if (!this::broadcastReceiver.isInitialized)
             return
         try {
-            applicationContext.unregisterReceiver(broadcastReceiver)
+            this.unregisterReceiver(broadcastReceiver)
         } catch (unregisteredException: IllegalArgumentException) {
-            Log.w(DUBUG_TAG, "Broadcast receiver already unregistered: "
+            Log.w(DEBUG_TAG, "Broadcast receiver already unregistered: "
                     + unregisteredException.message)
         }
     }
@@ -183,7 +250,7 @@ class PlayerNotificationService : Service() {
                           title: String,
                           intentAction: String): NotificationCompat.Action {
         return NotificationCompat.Action(drawable, title,
-                PendingIntent.getBroadcast(applicationContext, notificationId,
+                PendingIntent.getBroadcast(this, NOTIFICATION_ID,
                         Intent(intentAction), FLAG_UPDATE_CURRENT))
     }
 
@@ -196,21 +263,58 @@ class PlayerNotificationService : Service() {
     }
 
     override fun onDestroy() {
+        Log.d(DEBUG_TAG, "onDestroy()")
+        finish = true
+        NotificationManagerCompat.from(this).cancel(NOTIFICATION_ID)
+        stopForeground(true)
+        sessionConnector.setPlayer(null)
+        mediaSession.isActive = false
+        mediaSession.release()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            audioManager.abandonAudioFocusRequest(audioFocusRequest)
+        }
         unregisterBroadcastReceiver()
         BackgroundModeManager.getInstance().player = null
-        notificationManager.cancel(notificationId)
+        stopSelf()
+        Log.d(DEBUG_TAG, "super.nDestroy()")
         super.onDestroy()
     }
+
 
     //removing service when user swipe out our app
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
         stopSelf()
     }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun initAudioFocus(){
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN).run {
+            setAudioAttributes(AudioAttributes.Builder().run {
+                setUsage(AudioAttributes.USAGE_GAME)
+                setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                build()
+            })
+            setAcceptsDelayedFocusGain(true)
+            setOnAudioFocusChangeListener({
+                when (it) {
+                    AudioManager.AUDIOFOCUS_LOSS -> {
+                        videoPlayer.pause()
+                    }
+                }
+            }, Handler())
+            build()
+        }
+    }
+
+
 }
 
 
-val ACTION_CLOSE: String = "PlayerNotificationService.CLOSE"
-val ACTION_PLAY_PAUSE: String = "PlayerNotificationService.PLAY_PAUSE"
 
-val DUBUG_TAG: String = "VideoPlayerService"
+const val ACTION_CLOSE: String = "PlayerNotificationService.CLOSE"
+const val ACTION_PLAY_PAUSE: String = "PlayerNotificationService.PLAY_PAUSE"
+const val ACTION_UPDATE_NOTIFICATION: String = "PlayerNotificationService.UPDATE_NOTIFICATION"
+
+const val DEBUG_TAG: String = "VideoPlayerService"
