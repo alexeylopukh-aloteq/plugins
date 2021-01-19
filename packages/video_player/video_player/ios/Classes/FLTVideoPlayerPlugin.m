@@ -48,9 +48,8 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 @property(nonatomic, readonly) bool isPlaying;
 @property(nonatomic) bool isLooping;
 @property(nonatomic, readonly) bool isInitialized;
-@property(nonatomic) AVPlayerLayer *playerLayer;
 @property(nonatomic) AVPlayerViewController *playerViewController;
-@property(nonatomic) bool _pictureInPicture;
+@property(nonatomic) bool pictureInPicture;
 
 
 
@@ -247,6 +246,11 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     
     [asset loadValuesAsynchronouslyForKeys:@[ @"tracks" ] completionHandler:assetCompletionHandler];
     
+    self.playerViewController = [[AVPlayerViewController alloc]init];
+    self.playerViewController.player = self.player;
+    self.playerViewController.delegate = self;
+    self.playerViewController.view.layer.needsDisplayOnBoundsChange = YES;
+    
     return self;
 }
 
@@ -346,19 +350,6 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 }
 
 
-
--(void)moveToPip {
-    //  [self usePlayerLayer:CGRectMake(100, 100, 340, 290)];
-    
-    /* AVPlayerLayer *playerLayer = [AVPlayerLayer playerLayerWithPlayer: _player];
-     [playerLayer setFrame:CGRectMake(100, 100, 360, 180)];
-     [playerLayer setVideoGravity:AVLayerVideoGravityResize];
-     AVPictureInPictureController *controller = [[AVPictureInPictureController alloc]initWithPlayerLayer:playerLayer];
-     controller.delegate = self;
-     [controller startPictureInPicture];*/
-    
-}
-
 - (void)setRestoreUserInterfaceForPIPStopCompletionHandler:(BOOL)restore
 {
     if (_restoreUserInterfaceForPIPStopCompletionHandler != NULL) {
@@ -369,114 +360,51 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 - (void)moveToFullScreen {
     [self setupCommandCenter];
-    self.playerViewController = [[AVPlayerViewController alloc]init];
-    self.playerViewController.player = _player;
-    self.playerViewController.delegate = self;
+    _pictureInPicture = YES;
+
     UIViewController* vc = [[[UIApplication sharedApplication] keyWindow] rootViewController];
-    
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)),
-                   dispatch_get_main_queue(), ^{
-        [vc presentViewController:self.playerViewController animated:YES completion:nil];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [vc presentViewController:self.playerViewController animated:YES completion:^{
+           
+        }];
     });
 }
 
 - (void)setupCommandCenter {
-    MPRemoteCommandCenter *commandCenter = [MPRemoteCommandCenter sharedCommandCenter];
-    [commandCenter.playCommand setEnabled:YES];
-    [commandCenter.pauseCommand setEnabled:YES];
-    [commandCenter.togglePlayPauseCommand addTargetWithHandler: ^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        if (self.isPlaying) {
-            [self pause];
-        } else {
-            [self play];
-        }
-        NSLog(@"Toggle command");
-        
-        // Begin playing the current track.
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    
-    [commandCenter.playCommand addTargetWithHandler: ^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        NSLog(@"Play command");
-        [self play];
-        // Begin playing the current track.
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
-    
-    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
-    [[AVAudioSession sharedInstance] setActive: YES error: nil];
+    [[UIApplication sharedApplication]beginReceivingRemoteControlEvents];
+    MPNowPlayingInfoCenter *commandCenter = [MPNowPlayingInfoCenter defaultCenter];
+    NSMutableDictionary *nowPlayingInfo = [[NSMutableDictionary alloc]init];
+    commandCenter.nowPlayingInfo = nowPlayingInfo;
 }
 
-- (void)preparePipController {
-    
-    //    if (!self.pipController && self.playerLayer && [AVPictureInPictureController isPictureInPictureSupported]) {
-    //        self.pipController = [[AVPictureInPictureController alloc] initWithPlayerLayer:self.playerLayer];
-    //        self.pipController.delegate = self;
-    //    }
-}
-
-//- (void)usePlayerLayer: (CGRect) frame
-//{
-//    if( _player )
-//    {
-//        self.playerLayer = [AVPlayerLayer playerLayerWithPlayer:_player];
-//        UIViewController* vc = [[[UIApplication sharedApplication] keyWindow] rootViewController];
-//      //  self.playerLayer.frame = frame;
-//        self.playerLayer.needsDisplayOnBoundsChange = YES;
-//        [vc.view.layer insertSublayer:self.playerLayer atIndex:0];
-//        vc.view.layer.needsDisplayOnBoundsChange = YES;
-//
-//        if (@available(iOS 9.0, *)) {
-//            self.pipController = NULL;
-//        }
-//        [self preparePipController];
-//        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)),
-//        dispatch_get_main_queue(), ^{
-//            if (self.pipController  && ![self.pipController isPictureInPictureActive]) {
-//                dispatch_async(dispatch_get_main_queue(), ^{
-//                    [self.pipController startPictureInPicture];
-//                });
-//            } else if (self.pipController && [self.pipController isPictureInPictureActive]) {
-//                dispatch_async(dispatch_get_main_queue(), ^{
-//                    [self.pipController stopPictureInPicture];
-//                });
-//            }
-//          //  [self setPictureInPicture:true];
-//       });
-//    }
-//}
 
 
-//PIP controller delegate
+//AVViewController delegate
 -(void)playerViewControllerWillStartPictureInPicture:(AVPlayerViewController *)playerViewController {
-    self._pictureInPicture = YES;
-    
+    _pictureInPicture = YES;
 }
+
 
 -(void)playerViewControllerDidStopPictureInPicture:(AVPlayerViewController *)playerViewController {
-    self._pictureInPicture = NO;
+    _pictureInPicture = NO;
 }
 -(void)playerViewController:(AVPlayerViewController *)playerViewController restoreUserInterfaceForPictureInPictureStopWithCompletionHandler:(void (^)(BOOL))completionHandler {
     UIViewController* vc = [[[UIApplication sharedApplication] keyWindow] rootViewController];
     dispatch_async(dispatch_get_main_queue(), ^{
         [vc presentViewController:self.playerViewController animated:YES completion:^{
-            completionHandler(NO);
+            completionHandler(YES);
         }];
     });
-    
 }
 
-- (void)removePlayerLayer
-{
-    [self.playerLayer removeFromSuperlayer];
-    self.playerLayer = nil;
-}
+
 
 
 - (void)pause {
-    //  _isPlaying = false;
-    //  [self updatePlayingState];
+    if (self.pictureInPicture == NO) {
+        _isPlaying = false;
+        [self updatePlayingState];
+    }
 }
 
 - (int64_t)position {
@@ -581,11 +509,10 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 }
 
 - (void)dispose {
-    if (self._pictureInPicture == NO) {
+    if (self.pictureInPicture == NO) {
         [self disposeSansEventChannel];
         [_eventChannel setStreamHandler:nil];
     }
-    
 }
 
 @end
@@ -678,24 +605,26 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 - (void)dispose:(FLTTextureMessage*)input error:(FlutterError**)error {
     FLTVideoPlayer* player = _players[input.textureId];
-    [_registry unregisterTexture:input.textureId.intValue];
-    [_players removeObjectForKey:input.textureId];
-    // If the Flutter contains https://github.com/flutter/engine/pull/12695,
-    // the `player` is disposed via `onTextureUnregistered` at the right time.
-    // Without https://github.com/flutter/engine/pull/12695, there is no guarantee that the
-    // texture has completed the un-reregistration. It may leads a crash if we dispose the
-    // `player` before the texture is unregistered. We add a dispatch_after hack to make sure the
-    // texture is unregistered before we dispose the `player`.
-    //
-    // TODO(cyanglaz): Remove this dispatch block when
-    // https://github.com/flutter/flutter/commit/8159a9906095efc9af8b223f5e232cb63542ad0b is in
-    // stable And update the min flutter version of the plugin to the stable version.
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)),
-                   dispatch_get_main_queue(), ^{
-        if (!player.disposed) {
-            [player dispose];
-        }
-    });
+    if (player.pictureInPicture == NO) {
+        [_registry unregisterTexture:input.textureId.intValue];
+        [_players removeObjectForKey:input.textureId];
+        // If the Flutter contains https://github.com/flutter/engine/pull/12695,
+        // the `player` is disposed via `onTextureUnregistered` at the right time.
+        // Without https://github.com/flutter/engine/pull/12695, there is no guarantee that the
+        // texture has completed the un-reregistration. It may leads a crash if we dispose the
+        // `player` before the texture is unregistered. We add a dispatch_after hack to make sure the
+        // texture is unregistered before we dispose the `player`.
+        //
+        // TODO(cyanglaz): Remove this dispatch block when
+        // https://github.com/flutter/flutter/commit/8159a9906095efc9af8b223f5e232cb63542ad0b is in
+        // stable And update the min flutter version of the plugin to the stable version.
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)),
+                       dispatch_get_main_queue(), ^{
+            if (!player.disposed) {
+                [player dispose];
+            }
+        });
+    }
 }
 
 - (void)setLooping:(FLTLoopingMessage*)input error:(FlutterError**)error {
@@ -748,11 +677,29 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 -(void)moveToPip:(FLTMoveToPip *)input error:(FlutterError *_Nullable *_Nonnull)error {
     FLTVideoPlayer *player = _players[input.textureId];
-    [player moveToPip];
+   // [player moveToPip];
 }
 - (void)openFullScreen:(FLTOpenFullScreen *)input error:(FlutterError * _Nullable __autoreleasing *)error {
     FLTVideoPlayer *player = _players[input.textureId];
-    [player moveToFullScreen];
+
+    [_players enumerateKeysAndObjectsUsingBlock:^(NSNumber *key, FLTVideoPlayer *videoPlayer, BOOL* stop) {
+        if (videoPlayer.pictureInPicture == YES && player != videoPlayer) {
+            videoPlayer.pictureInPicture = NO;
+            [_registry unregisterTexture:key.intValue];
+            [_players removeObjectForKey:key];
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)),
+                           dispatch_get_main_queue(), ^{
+                if (!videoPlayer.disposed) {
+                    [videoPlayer dispose];
+                }
+            });
+        }
+    }];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (player.pictureInPicture == NO) {
+            [player moveToFullScreen];
+        }
+    });
 }
 
 
