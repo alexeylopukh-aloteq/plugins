@@ -5,6 +5,7 @@
 package io.flutter.plugins.videoplayer;
 
 import android.app.Activity;
+import android.app.AppOpsManager;
 import android.app.PictureInPictureParams;
 import android.app.RemoteAction;
 import android.content.Context;
@@ -37,6 +38,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
+
+import static io.flutter.plugins.videoplayer.Messages.PIP_NOT_ALLOWED_MESSAGE;
 
 /** Android platform implementation of the VideoPlayerPlugin. */
 public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi, ActivityAware {
@@ -199,7 +202,17 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi, Activit
   }
 
   @Override
-  public void movePip(TextureMessage arg) {
+  public void movePip(TextureMessage arg) throws Exception {
+    if (BackgroundModeManager.Companion.getInstance().getPlayer() != null) {
+      final VideoPlayer backgroundPlayer = BackgroundModeManager.Companion.getInstance().getPlayer();
+      backgroundPlayer.backgroundMode = false;
+      Intent intent = new Intent(appActivity, PlayerNotificationService.class);
+      appActivity.stopService(intent);
+    }
+    if (!hasPipPermission()){
+      Log.d(TAG, PIP_NOT_ALLOWED_MESSAGE);
+      throw new Exception(PIP_NOT_ALLOWED_MESSAGE);
+    }
     VideoPlayer player = videoPlayers.get(arg.getTextureId());
     BackgroundModeManager.Companion.getInstance().setPlayer(player);
     Intent intent = new Intent(appActivity, PlayerNotificationService.class);
@@ -221,6 +234,12 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi, Activit
 
   @Override
   public void moveToBackgroundMode(TextureMessage arg) {
+    if (BackgroundModeManager.Companion.getInstance().getPlayer() != null) {
+      final VideoPlayer backgroundPlayer = BackgroundModeManager.Companion.getInstance().getPlayer();
+      backgroundPlayer.backgroundMode = false;
+      Intent intent = new Intent(appActivity, PlayerNotificationService.class);
+      appActivity.stopService(intent);
+    }
     VideoPlayer player = videoPlayers.get(arg.getTextureId());
     BackgroundModeManager.Companion.getInstance().setPlayer(player);
     Intent intent = new Intent(appActivity, PlayerNotificationService.class);
@@ -234,6 +253,24 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi, Activit
   public void play(TextureMessage arg) {
     VideoPlayer player = videoPlayers.get(arg.getTextureId());
     player.play();
+  }
+
+  @SuppressWarnings("deprecation")
+  private Boolean hasPipPermission() {
+    AppOpsManager appOps = (AppOpsManager) appActivity.getSystemService(Context.APP_OPS_SERVICE);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        return appOps.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_PICTURE_IN_PICTURE,
+                android.os.Process.myUid(),
+                appActivity.getApplicationContext().getPackageName()) == AppOpsManager.MODE_ALLOWED;
+      } else {
+        return appOps.checkOpNoThrow(AppOpsManager.OPSTR_PICTURE_IN_PICTURE,
+                android.os.Process.myUid(),
+                appActivity.getApplicationContext().getPackageName()) == AppOpsManager.MODE_ALLOWED;
+      }
+    } else {
+      return false;
+    }
   }
 
   public PositionMessage position(TextureMessage arg) {

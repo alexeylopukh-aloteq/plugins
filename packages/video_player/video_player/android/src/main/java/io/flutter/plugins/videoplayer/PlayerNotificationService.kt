@@ -40,10 +40,10 @@ class PlayerNotificationService : Service() {
 
     private lateinit var videoPlayer: VideoPlayer
     private lateinit var exoPlayer: SimpleExoPlayer
-    private lateinit var mediaSession: MediaSessionCompat
-    private lateinit var sessionConnector: MediaSessionConnector
+    private var mediaSession: MediaSessionCompat? = null
+    private var sessionConnector: MediaSessionConnector? = null
     private lateinit var notificationManager: NotificationManager
-    private lateinit var audioManager: AudioManager
+    private var audioManager: AudioManager? = null
     private lateinit var audioFocusRequest: AudioFocusRequest
 
 
@@ -74,7 +74,7 @@ class PlayerNotificationService : Service() {
                 object : Player.EventListener {
                     override fun onIsPlayingChanged(isPlaying: Boolean) {
                         if (isPlaying && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            audioManager.requestAudioFocus(audioFocusRequest)
+                            audioManager?.requestAudioFocus(audioFocusRequest)
                         }
                         updateNotification()
                     }
@@ -85,12 +85,15 @@ class PlayerNotificationService : Service() {
                         if (playbackState == Player.STATE_IDLE) {
                             Log.d(DEBUG_TAG, "STATE_IDLE")
                             stopSelf()
+                        } else if (playbackState == Player.STATE_ENDED){
+                            videoPlayer.seekTo(0)
+                            videoPlayer.pause()
                         }
                     }
                 })
     }
 
-    private fun initNotificationManager(){
+    private fun initNotificationManager() {
         notificationManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             getSystemService(NotificationManager::class.java)
         } else {
@@ -98,11 +101,11 @@ class PlayerNotificationService : Service() {
         }
 
         mediaSession = MediaSessionCompat(this, "PlayerNotificationService")
-        mediaSession.setFlags(
+        mediaSession?.setFlags(
                 MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
                         MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
-        mediaSession.isActive = true
-        mediaSession.setPlaybackState(PlaybackStateCompat.Builder()
+        mediaSession?.isActive = true
+        mediaSession?.setPlaybackState(PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_NONE, -1, 1f)
                 .setActions(PlaybackStateCompat.ACTION_SEEK_TO
                         or PlaybackStateCompat.ACTION_PLAY
@@ -113,14 +116,16 @@ class PlayerNotificationService : Service() {
                         or PlaybackStateCompat.ACTION_STOP)
                 .build())
 
-        sessionConnector = MediaSessionConnector(mediaSession)
-        sessionConnector.setPlayer(exoPlayer)
+        if (mediaSession != null) {
+            sessionConnector = MediaSessionConnector(mediaSession!!)
+            sessionConnector?.setPlayer(exoPlayer)
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotificationChannel()
         }
     }
 
-    private fun createNotification() : NotificationCompat.Builder{
+    private fun createNotification() : NotificationCompat.Builder {
         val builder: NotificationCompat.Builder = NotificationCompat.Builder(this,
                 CHANNEL_ID)
 
@@ -130,8 +135,8 @@ class PlayerNotificationService : Service() {
         style.setCancelButtonIntent(PendingIntent.getBroadcast(this, NOTIFICATION_ID,
                 Intent(ACTION_CLOSE), FLAG_UPDATE_CURRENT))
         builder.setStyle(style
-                .setMediaSession(mediaSession.sessionToken))
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setMediaSession(mediaSession?.sessionToken))
+                .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
                 .setShowWhen(false)
@@ -154,7 +159,7 @@ class PlayerNotificationService : Service() {
         val serviceChannel = NotificationChannel(
                 CHANNEL_ID,
                 CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_LOW
         )
         notificationManager.createNotificationChannel(serviceChannel)
     }
@@ -176,7 +181,7 @@ class PlayerNotificationService : Service() {
         }
     }
 
-    private fun updateNotification(){
+    private fun updateNotification() {
         if (finish)
             return
         val notification = createNotification()
@@ -267,12 +272,15 @@ class PlayerNotificationService : Service() {
         finish = true
         NotificationManagerCompat.from(this).cancel(NOTIFICATION_ID)
         stopForeground(true)
-        sessionConnector.setPlayer(null)
-        mediaSession.isActive = false
-        mediaSession.release()
+        sessionConnector?.setPlayer(null)
+        mediaSession?.isActive = false
+        mediaSession?.release()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            audioManager.abandonAudioFocusRequest(audioFocusRequest)
+            audioManager?.abandonAudioFocusRequest(audioFocusRequest)
+            audioManager = null
         }
+        mediaSession = null
+        sessionConnector = null
         unregisterBroadcastReceiver()
         BackgroundModeManager.getInstance().player = null
         stopSelf()
@@ -288,7 +296,7 @@ class PlayerNotificationService : Service() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun initAudioFocus(){
+    private fun initAudioFocus() {
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN).run {
             setAudioAttributes(AudioAttributes.Builder().run {

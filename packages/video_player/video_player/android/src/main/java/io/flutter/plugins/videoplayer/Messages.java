@@ -3,14 +3,19 @@
 
 package io.flutter.plugins.videoplayer;
 
+import io.flutter.Log;
 import io.flutter.plugin.common.BasicMessageChannel;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.StandardMessageCodec;
 import java.util.HashMap;
+import java.util.Objects;
+
 
 /** Generated class from Pigeon. */
 @SuppressWarnings("unused")
 public class Messages {
+
+  static final String PIP_NOT_ALLOWED_MESSAGE = "Pip not allowed";
 
   /** Generated class from Pigeon that represents data sent in messages. */
   public static class TextureMessage {
@@ -330,7 +335,7 @@ public class Messages {
 
     void setPlaybackSpeed(PlaybackSpeedMessage arg);
 
-    void movePip(TextureMessage arg);
+    void movePip(TextureMessage arg) throws Exception;
 
     void disableBackgroundMode(TextureMessage arg);
 
@@ -530,7 +535,13 @@ public class Messages {
                       api.movePip(input);
                       wrapped.put("result", null);
                     } catch (Exception exception) {
-                      wrapped.put("error", wrapError(exception));
+                      if (exception.getMessage() != null && exception.getMessage().equals(PIP_NOT_ALLOWED_MESSAGE)) {
+                        HashMap<String, Object> errorMap = new HashMap<>();
+                        errorMap.put("message", PIP_NOT_ALLOWED_MESSAGE);
+                        errorMap.put("code", "PIP_NOT_ALLOWED");
+                        errorMap.put("details", null);
+                        wrapped.put("error", errorMap);
+                      } else wrapped.put("error", wrapError(exception));
                     }
                     reply.reply(wrapped);
                   });
