@@ -252,7 +252,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   bool _isDisposed = false;
   Completer<void> _creatingCompleter;
   StreamSubscription<dynamic> _eventSubscription;
-  _VideoAppLifeCycleObserver _lifeCycleObserver;
+  // _VideoAppLifeCycleObserver _lifeCycleObserver;
 
   /// This is just exposed for testing. It shouldn't be used by anyone depending
   /// on the plugin.
@@ -261,8 +261,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
   /// Attempts to open the given [dataSource] and load metadata about the video.
   Future<void> initialize() async {
-    _lifeCycleObserver = _VideoAppLifeCycleObserver(this);
-    _lifeCycleObserver.initialize();
+    // _lifeCycleObserver = _VideoAppLifeCycleObserver(this);
+    // _lifeCycleObserver.initialize();
     _creatingCompleter = Completer<void>();
 
     DataSource dataSourceDescription;
@@ -376,7 +376,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         await _eventSubscription?.cancel();
         await _videoPlayerPlatform.dispose(_textureId);
       }
-      _lifeCycleObserver.dispose();
+      //_lifeCycleObserver.dispose();
     }
     _isDisposed = true;
     super.dispose();
@@ -392,7 +392,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     value = value.copyWith(
       backgroundMode: true,
     );
-    await _videoPlayerPlatform.moveToPip(_textureId);
+    return _videoPlayerPlatform.moveToPip(_textureId);
   }
 
   /// Move current video in pip mode
