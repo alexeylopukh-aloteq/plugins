@@ -762,7 +762,7 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
 }
 - (void)openFullScreen:(FLTOpenFullScreen *)input error:(FlutterError * _Nullable __autoreleasing *)error flutterCallback:(FlutterResult)callback {
     FLTVideoPlayer *player = _players[input.textureId];
-
+    player.flutterCallback = callback;
     [_players enumerateKeysAndObjectsUsingBlock:^(NSNumber *key, FLTVideoPlayer *videoPlayer, BOOL* stop) {
         if (videoPlayer.pictureInPicture == YES && player != videoPlayer) {
             videoPlayer.pictureInPicture = NO;
