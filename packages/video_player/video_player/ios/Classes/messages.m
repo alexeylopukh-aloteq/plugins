@@ -444,7 +444,7 @@ void FLTVideoPlayerApiSetup(id<FlutterBinaryMessenger> binaryMessenger, id<FLTVi
                 FlutterError *error;
                 FLTOpenFullScreen *input = [FLTOpenFullScreen fromMap:message];
                 [api openFullScreen:input error:&error flutterCallback : callback];
-                callback(wrapResult(nil, error));
+              //  callback(wrapResult(nil, error));
             }];
         } else {
             [channel setMessageHandler:nil];
