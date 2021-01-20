@@ -50,6 +50,7 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 @property(nonatomic, readonly) bool isInitialized;
 @property(nonatomic) AVPlayerViewController *playerViewController;
 @property(nonatomic) bool pictureInPicture;
+@property(nonatomic) NSURL *currentAssetUrl;
 
 
 
@@ -173,6 +174,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 - (instancetype)initWithURL:(NSURL*)url frameUpdater:(FLTFrameUpdater*)frameUpdater {
     AVPlayerItem* item = [AVPlayerItem playerItemWithURL:url];
+    self.currentAssetUrl = url;
     return [self initWithPlayerItem:item frameUpdater:frameUpdater];
 }
 
@@ -594,6 +596,17 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
         player = [[FLTVideoPlayer alloc] initWithAsset:assetPath frameUpdater:frameUpdater];
         return [self onPlayerSetup:player frameUpdater:frameUpdater];
     } else if (input.uri) {
+        NSURL *inputUrl = [NSURL URLWithString:input.uri];
+        for (NSNumber *key in _players.allKeys) {
+            FLTVideoPlayer *existingPlayer = _players[key];
+            if ([existingPlayer.currentAssetUrl.absoluteString isEqualToString:inputUrl.absoluteString] && existingPlayer.pictureInPicture == YES) {
+                [existingPlayer sendInitialized];
+                FLTTextureMessage* result = [[FLTTextureMessage alloc] init];
+                result.textureId = @([key longValue]);
+                return result;
+            }
+        }
+        
         player = [[FLTVideoPlayer alloc] initWithURL:[NSURL URLWithString:input.uri]
                                         frameUpdater:frameUpdater];
         return [self onPlayerSetup:player frameUpdater:frameUpdater];
