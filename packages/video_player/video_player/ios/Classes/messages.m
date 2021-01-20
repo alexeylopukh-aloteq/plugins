@@ -84,6 +84,19 @@ static NSDictionary *wrapResult(NSDictionary *result, FlutterError *error) {
     if ((NSNull *)result.formatHint == [NSNull null]) {
         result.formatHint = nil;
     }
+    result.itemDescription = dict[@"description"];
+    if ((NSNull *)result.itemDescription == [NSNull null]) {
+        result.itemDescription = nil;
+    }
+    result.title = dict[@"title"];
+    if ((NSNull *)result.title == [NSNull null]) {
+        result.title = nil;
+    }
+    result.previewUrl = dict[@"previewUrl"];
+    if ((NSNull *)result.previewUrl == [NSNull null]) {
+        result.previewUrl = nil;
+    }
+    
     return result;
 }
 - (NSDictionary *)toMap {

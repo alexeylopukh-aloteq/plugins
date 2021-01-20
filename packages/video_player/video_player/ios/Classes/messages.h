@@ -24,6 +24,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy, nullable) NSString *uri;
 @property(nonatomic, copy, nullable) NSString *packageName;
 @property(nonatomic, copy, nullable) NSString *formatHint;
+@property(nonatomic, copy, nullable) NSString *title;
+@property(nonatomic, copy, nullable) NSString *itemDescription;
+@property(nonatomic, copy, nullable) NSString *previewUrl;
 @end
 
 @interface FLTLoopingMessage : NSObject

@@ -319,6 +319,11 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
         [_player pause];
     }
     _displayLink.paused = !_isPlaying;
+    if (_eventSink != nil) {
+        _eventSink(@{@"event" : @"isPlaying"});
+        _eventSink(@{@"isPlaying" : @(_isPlaying)});
+
+    }
 }
 
 - (void)sendInitialized {
@@ -362,12 +367,12 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 - (void)moveToFullScreen {
     [self setupCommandCenter];
-    _pictureInPicture = YES;
+   // _pictureInPicture = YES;
 
     UIViewController* vc = [[[UIApplication sharedApplication] keyWindow] rootViewController];
     dispatch_async(dispatch_get_main_queue(), ^{
         [vc presentViewController:self.playerViewController animated:YES completion:^{
-           
+         
         }];
     });
 }
@@ -384,22 +389,51 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 //AVViewController delegate
 -(void)playerViewControllerWillStartPictureInPicture:(AVPlayerViewController *)playerViewController {
     _pictureInPicture = YES;
+    NSLog(@"Will start pip");
 }
 
+-(void)playerViewControllerDidStartPictureInPicture:(AVPlayerViewController *)playerViewController {
+    NSLog(@"Did start pip");
+
+}
 
 -(void)playerViewControllerDidStopPictureInPicture:(AVPlayerViewController *)playerViewController {
     _pictureInPicture = NO;
+    NSLog(@"Did stop pip");
+
 }
 -(void)playerViewController:(AVPlayerViewController *)playerViewController restoreUserInterfaceForPictureInPictureStopWithCompletionHandler:(void (^)(BOOL))completionHandler {
     UIViewController* vc = [[[UIApplication sharedApplication] keyWindow] rootViewController];
+    NSLog(@"Resume control");
+
     dispatch_async(dispatch_get_main_queue(), ^{
         [vc presentViewController:self.playerViewController animated:YES completion:^{
             completionHandler(YES);
         }];
     });
 }
+- (void)playerViewControllerDidEndDismissalTransition:(AVPlayerViewController *)playerViewController {
+    _pictureInPicture = NO;
+    NSLog(@"Did end dismiss transaction");
 
+}
 
+- (void)playerViewController:(AVPlayerViewController *)playerViewController
+willEndFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    NSLog(@"Will end dismiss presentation");
+
+}
+
+- (void)playerViewControllerWillBeginDismissalTransition:(AVPlayerViewController *)playerViewController {
+    NSLog(@"Will begin dismiss presentation");
+
+}
+- (void)playerViewController:(AVPlayerViewController *)playerViewController
+willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    NSLog(@"Will begin fullscreen presentation");
+    [self play];
+
+}
 
 
 - (void)pause {
@@ -606,7 +640,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
                 return result;
             }
         }
-        
+        [self updateNowPlayingInfoWith:input];
         player = [[FLTVideoPlayer alloc] initWithURL:[NSURL URLWithString:input.uri]
                                         frameUpdater:frameUpdater];
         return [self onPlayerSetup:player frameUpdater:frameUpdater];
@@ -614,6 +648,26 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
         *error = [FlutterError errorWithCode:@"video_player" message:@"not implemented" details:nil];
         return nil;
     }
+}
+
+- (void) updateNowPlayingInfoWith:(FLTCreateMessage*)message {
+    NSMutableDictionary *nowPlayingInfo = [NSMutableDictionary new];
+    nowPlayingInfo[MPMediaItemPropertyTitle] = message.title;
+    nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = message.itemDescription;
+// if (mediaItem) {
+//   nowPlayingInfo[MPMediaItemPropertyTitle] = mediaItem[@"title"];
+//   nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = mediaItem[@"album"];
+//   if (mediaItem[@"duration"] != [NSNull null]) {
+//     nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = [NSNumber numberWithLongLong: ([mediaItem[@"duration"] longLongValue] / 1000)];
+//   }
+//   if (artwork) {
+//     nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork;
+//   }
+//   nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = [NSNumber numberWithInt:([position intValue] / 1000)];
+// }
+// int stateCode = state ? [state intValue] : 0;
+// nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = [NSNumber numberWithDouble: stateCode >= 3 ? 1.0 : 0.0];
+ [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = nowPlayingInfo;
 }
 
 - (void)dispose:(FLTTextureMessage*)input error:(FlutterError**)error {
