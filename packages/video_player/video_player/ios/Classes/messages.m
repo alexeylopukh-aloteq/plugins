@@ -443,7 +443,7 @@ void FLTVideoPlayerApiSetup(id<FlutterBinaryMessenger> binaryMessenger, id<FLTVi
             [channel setMessageHandler:^(id _Nullable message, FlutterReply callback) {
                 FlutterError *error;
                 FLTOpenFullScreen *input = [FLTOpenFullScreen fromMap:message];
-                [api openFullScreen:input error:&error];
+                [api openFullScreen:input error:&error flutterCallback : callback];
                 callback(wrapResult(nil, error));
             }];
         } else {

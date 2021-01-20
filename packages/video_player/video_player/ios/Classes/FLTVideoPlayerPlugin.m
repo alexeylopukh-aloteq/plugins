@@ -51,7 +51,7 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 @property(nonatomic) AVPlayerViewController *playerViewController;
 @property(nonatomic) bool pictureInPicture;
 @property(nonatomic) NSURL *currentAssetUrl;
-
+@property(nonatomic) FlutterResult flutterCallback;
 
 
 - (instancetype)initWithURL:(NSURL*)url frameUpdater:(FLTFrameUpdater*)frameUpdater;
@@ -70,6 +70,20 @@ void (^__strong _Nonnull _restoreUserInterfaceForPIPStopCompletionHandler)(BOOL)
 
 
 @implementation FLTVideoPlayer
+
+static NSDictionary *wrapResult(NSDictionary *result, FlutterError *error) {
+    NSDictionary *errorDict = (NSDictionary *)[NSNull null];
+    if (error) {
+        errorDict = [NSDictionary
+                     dictionaryWithObjectsAndKeys:(error.code ? error.code : [NSNull null]), @"code",
+                     (error.message ? error.message : [NSNull null]), @"message",
+                     (error.details ? error.details : [NSNull null]), @"details",
+                     nil];
+    }
+    return [NSDictionary dictionaryWithObjectsAndKeys:(result ? result : [NSNull null]), @"result",
+            errorDict, @"error", nil];
+}
+
 - (instancetype)initWithAsset:(NSString*)asset frameUpdater:(FLTFrameUpdater*)frameUpdater {
     NSString* path = [[NSBundle mainBundle] pathForResource:asset ofType:nil];
     return [self initWithURL:[NSURL fileURLWithPath:path] frameUpdater:frameUpdater];
@@ -253,6 +267,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     self.playerViewController.delegate = self;
     self.playerViewController.view.layer.needsDisplayOnBoundsChange = YES;
     
+    
     return self;
 }
 
@@ -343,6 +358,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
         
         _isInitialized = true;
         _eventSink(@{
+            @"isBackgroundMode" : @(self.pictureInPicture),
             @"event" : @"initialized",
             @"duration" : @([self duration]),
             @"width" : @(width),
@@ -413,7 +429,6 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     });
 }
 - (void)playerViewControllerDidEndDismissalTransition:(AVPlayerViewController *)playerViewController {
-    _pictureInPicture = NO;
     NSLog(@"Did end dismiss transaction");
 
 }
@@ -421,7 +436,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 - (void)playerViewController:(AVPlayerViewController *)playerViewController
 willEndFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
     NSLog(@"Will end dismiss presentation");
-
+    self.flutterCallback(wrapResult(nil, nil));
 }
 
 - (void)playerViewControllerWillBeginDismissalTransition:(AVPlayerViewController *)playerViewController {
@@ -431,7 +446,6 @@ willEndFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTransi
 - (void)playerViewController:(AVPlayerViewController *)playerViewController
 willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
     NSLog(@"Will begin fullscreen presentation");
-    [self play];
 
 }
 
@@ -746,7 +760,7 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
     FLTVideoPlayer *player = _players[input.textureId];
    // [player moveToPip];
 }
-- (void)openFullScreen:(FLTOpenFullScreen *)input error:(FlutterError * _Nullable __autoreleasing *)error {
+- (void)openFullScreen:(FLTOpenFullScreen *)input error:(FlutterError * _Nullable __autoreleasing *)error flutterCallback:(FlutterResult)callback {
     FLTVideoPlayer *player = _players[input.textureId];
 
     [_players enumerateKeysAndObjectsUsingBlock:^(NSNumber *key, FLTVideoPlayer *videoPlayer, BOOL* stop) {
