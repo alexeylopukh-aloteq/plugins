@@ -46,6 +46,7 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
     message.title = dataSource.title;
     message.description = dataSource.description;
     message.previewUrl = dataSource.previewUrl;
+    message.pauseBackgroundVideo = dataSource.pauseBackgroundVideo;
 
     TextureMessage response = await _api.create(message);
     return response.textureId;

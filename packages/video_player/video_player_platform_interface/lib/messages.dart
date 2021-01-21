@@ -35,6 +35,7 @@ class CreateMessage {
   String title;
   String description;
   String previewUrl;
+  bool pauseBackgroundVideo;
   // ignore: unused_element
   Map<dynamic, dynamic> _toMap() {
     final Map<dynamic, dynamic> pigeonMap = <dynamic, dynamic>{};
@@ -45,6 +46,7 @@ class CreateMessage {
     pigeonMap['title'] = title;
     pigeonMap['description'] = description;
     pigeonMap['previewUrl'] = previewUrl;
+    pigeonMap['pause_background_video'] = pauseBackgroundVideo == true;
     return pigeonMap;
   }
 
@@ -61,6 +63,7 @@ class CreateMessage {
     result.description = pigeonMap['description'];
     result.title = pigeonMap['title'];
     result.previewUrl = pigeonMap['previewUrl'];
+    result.pauseBackgroundVideo = pigeonMap['pause_background_video'] == true;
     return result;
   }
 }

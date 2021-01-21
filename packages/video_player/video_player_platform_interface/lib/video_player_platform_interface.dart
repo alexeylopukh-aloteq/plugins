@@ -173,6 +173,7 @@ class DataSource {
     @required this.title,
     @required this.description,
     @required this.previewUrl,
+    @required this.pauseBackgroundVideo,
   });
 
   /// The way in which the video was originally loaded.
@@ -197,6 +198,9 @@ class DataSource {
   /// The package that the asset was loaded from. Only set for
   /// [DataSourceType.asset] videos.
   final String package;
+
+  ///
+  final bool pauseBackgroundVideo;
 
   /// Title for background player
   final String title;
