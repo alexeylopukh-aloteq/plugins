@@ -260,7 +260,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   int get textureId => _textureId;
 
   /// Attempts to open the given [dataSource] and load metadata about the video.
-  Future<void> initialize() async {
+  Future<void> initialize({bool pauseBackgroundPlayer = false}) async {
     // _lifeCycleObserver = _VideoAppLifeCycleObserver(this);
     // _lifeCycleObserver.initialize();
     _creatingCompleter = Completer<void>();
@@ -275,6 +275,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           previewUrl: previewUrl,
           title: title,
           description: description,
+          pauseBackgroundVideo: pauseBackgroundPlayer,
         );
         break;
       case DataSourceType.network:
@@ -285,6 +286,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           previewUrl: previewUrl,
           title: title,
           description: description,
+          pauseBackgroundVideo: pauseBackgroundPlayer,
         );
         break;
       case DataSourceType.file:
@@ -294,6 +296,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           previewUrl: previewUrl,
           title: title,
           description: description,
+          pauseBackgroundVideo: pauseBackgroundPlayer,
         );
         break;
     }
