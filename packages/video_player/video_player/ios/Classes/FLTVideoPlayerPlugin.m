@@ -192,6 +192,22 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     return [self initWithPlayerItem:item frameUpdater:frameUpdater];
 }
 
+
+-(void)setupRemoteControlCenter {
+    MPRemoteCommandCenter *commandCenter = [MPRemoteCommandCenter sharedCommandCenter];
+    commandCenter.playCommand.enabled = YES;
+    [commandCenter.playCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+        [self play];
+        return MPRemoteCommandHandlerStatusSuccess;
+    }];
+    commandCenter.pauseCommand.enabled = YES;
+    [commandCenter.pauseCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+        [self pause];
+        return  MPRemoteCommandHandlerStatusSuccess;
+    }];
+}
+
+
 - (CGAffineTransform)fixTransform:(AVAssetTrack*)videoTrack {
     CGAffineTransform transform = videoTrack.preferredTransform;
     // TODO(@recastrodiaz): why do we need to do this? Why is the preferredTransform incorrect?
@@ -266,8 +282,8 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     self.playerViewController.player = self.player;
     self.playerViewController.delegate = self;
     self.playerViewController.view.layer.needsDisplayOnBoundsChange = YES;
-    
-    
+    self.playerViewController.updatesNowPlayingInfoCenter = NO;
+    [self setupRemoteControlCenter];
     return self;
 }
 
@@ -382,7 +398,6 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 }
 
 - (void)moveToFullScreen {
-    [self setupCommandCenter];
    // _pictureInPicture = YES;
 
     UIViewController* vc = [[[UIApplication sharedApplication] keyWindow] rootViewController];
@@ -393,12 +408,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     });
 }
 
-- (void)setupCommandCenter {
-    [[UIApplication sharedApplication]beginReceivingRemoteControlEvents];
-    MPNowPlayingInfoCenter *commandCenter = [MPNowPlayingInfoCenter defaultCenter];
-    NSMutableDictionary *nowPlayingInfo = [[NSMutableDictionary alloc]init];
-    commandCenter.nowPlayingInfo = nowPlayingInfo;
-}
+
 
 
 
@@ -668,20 +678,23 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
     NSMutableDictionary *nowPlayingInfo = [NSMutableDictionary new];
     nowPlayingInfo[MPMediaItemPropertyTitle] = message.title;
     nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = message.itemDescription;
-// if (mediaItem) {
-//   nowPlayingInfo[MPMediaItemPropertyTitle] = mediaItem[@"title"];
-//   nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = mediaItem[@"album"];
-//   if (mediaItem[@"duration"] != [NSNull null]) {
-//     nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = [NSNumber numberWithLongLong: ([mediaItem[@"duration"] longLongValue] / 1000)];
-//   }
-//   if (artwork) {
-//     nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork;
-//   }
-//   nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = [NSNumber numberWithInt:([position intValue] / 1000)];
-// }
-// int stateCode = state ? [state intValue] : 0;
-// nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = [NSNumber numberWithDouble: stateCode >= 3 ? 1.0 : 0.0];
- [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = nowPlayingInfo;
+    MPMediaItemArtwork *artwork;
+    if (message.previewUrl != [NSNull null]) {
+      NSURL* artUrl = [[NSURL alloc] initWithString:message.previewUrl];
+      NSData* artData = [NSData dataWithContentsOfURL:artUrl];
+      UIImage* artImage = [UIImage imageWithData:artData];
+      artwork = [[MPMediaItemArtwork alloc]
+        initWithBoundsSize:artImage.size
+            requestHandler:^UIImage* _Nonnull(CGSize size){
+              return artImage;
+            }];
+    } else {
+      artwork = nil;
+    }
+    if (artwork) {
+      nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork;
+    }
+    [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = nowPlayingInfo;
 }
 
 - (void)dispose:(FLTTextureMessage*)input error:(FlutterError**)error {
