@@ -49,8 +49,18 @@ class PlayerNotificationService : Service() {
 
     private var videoBitmap: Bitmap? = null
     private lateinit var broadcastReceiver: BroadcastReceiver
+    private var contentIntent: PendingIntent? = null
 
     private var finish = false
+
+    companion object {
+        private var activity: Activity? = null
+        fun init(activity: Activity?) {
+            this.activity = activity
+        }
+    }
+
+
 
     override fun onCreate() {
         super.onCreate()
@@ -62,10 +72,11 @@ class PlayerNotificationService : Service() {
             stopSelf()
             return
         }
-        Log.d(DEBUG_TAG, "start foreground")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             initAudioFocus()
         }
+        val intent = Intent(activity, activity?.javaClass)
+        contentIntent = PendingIntent.getActivity(activity, 0, intent, FLAG_UPDATE_CURRENT)
         initNotificationManager()
         startForeground(NOTIFICATION_ID, createNotification().build())
         applyImageUrl(videoPlayer.previewUrl)
@@ -85,7 +96,7 @@ class PlayerNotificationService : Service() {
                         if (playbackState == Player.STATE_IDLE) {
                             Log.d(DEBUG_TAG, "STATE_IDLE")
                             stopSelf()
-                        } else if (playbackState == Player.STATE_ENDED){
+                        } else if (playbackState == Player.STATE_ENDED) {
                             videoPlayer.seekTo(0)
                             videoPlayer.pause()
                         }
@@ -128,6 +139,7 @@ class PlayerNotificationService : Service() {
     private fun createNotification() : NotificationCompat.Builder {
         val builder: NotificationCompat.Builder = NotificationCompat.Builder(this,
                 CHANNEL_ID)
+        builder.setContentIntent(contentIntent)
 
         val style = androidx.media.app.NotificationCompat.MediaStyle()
         style.setShowActionsInCompactView(0)
@@ -268,6 +280,7 @@ class PlayerNotificationService : Service() {
     }
 
     override fun onDestroy() {
+        contentIntent = null
         Log.d(DEBUG_TAG, "onDestroy()")
         finish = true
         NotificationManagerCompat.from(this).cancel(NOTIFICATION_ID)
@@ -284,7 +297,6 @@ class PlayerNotificationService : Service() {
         unregisterBroadcastReceiver()
         BackgroundModeManager.getInstance().player = null
         stopSelf()
-        Log.d(DEBUG_TAG, "super.nDestroy()")
         super.onDestroy()
     }
 
