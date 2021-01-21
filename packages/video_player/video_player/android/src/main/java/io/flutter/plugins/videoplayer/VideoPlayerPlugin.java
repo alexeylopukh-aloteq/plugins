@@ -162,6 +162,7 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi, Activit
       if (backgroundPlayer != null
               && backgroundPlayer.getExoPlayer().getCurrentMediaItem().mediaId.equals(arg.getUri())){
         player = backgroundPlayer;
+        player.incUsageCount();
         new Handler().postDelayed(player::sendInitialized, 10);
       } else
         player =

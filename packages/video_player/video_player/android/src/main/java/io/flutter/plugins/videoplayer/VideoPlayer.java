@@ -68,6 +68,12 @@ final public class VideoPlayer {
   public final String title;
   public final String description;
   public final String previewUrl;
+
+  private int usageCount = 1;
+
+  public void incUsageCount() {
+    usageCount++;
+  }
   
 
   VideoPlayer(
@@ -305,8 +311,11 @@ final public class VideoPlayer {
   }
 
   void dispose() {
-    if (backgroundMode)
+    Log.d("dispose", "call");
+    usageCount--;
+    if (usageCount > 0)
       return;
+    Log.d("dispose", "Start dispose");
     if (isInitialized) {
       exoPlayer.stop();
     }

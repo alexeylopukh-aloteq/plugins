@@ -19,10 +19,12 @@ class BackgroundModeManager private constructor() {
     var player: VideoPlayer? = null
         get() = field
         set(value) {
-            if (value == null){
+            if (value == null) {
                 field?.backgroundMode = false
+                field?.dispose()
             } else {
                 value.backgroundMode = true
+                value.incUsageCount()
             }
             field = value
 
