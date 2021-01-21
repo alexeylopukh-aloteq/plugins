@@ -75,8 +75,10 @@ class PlayerNotificationService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             initAudioFocus()
         }
-        val intent = Intent(activity, activity?.javaClass)
-        contentIntent = PendingIntent.getActivity(activity, 0, intent, FLAG_UPDATE_CURRENT)
+        if (activity != null){
+            val intent = Intent(activity, activity?.javaClass)
+            contentIntent = PendingIntent.getActivity(activity, 0, intent, FLAG_UPDATE_CURRENT)
+        }
         initNotificationManager()
         startForeground(NOTIFICATION_ID, createNotification().build())
         applyImageUrl(videoPlayer.previewUrl)
@@ -218,6 +220,9 @@ class PlayerNotificationService : Service() {
             ACTION_UPDATE_NOTIFICATION -> {
                 updateNotification()
             }
+            ACTION_EXIT_PIP -> {
+                videoPlayer.pause()
+            }
         }
         updateNotification()
     }
@@ -233,6 +238,7 @@ class PlayerNotificationService : Service() {
         intentFilter.addAction(ACTION_CLOSE)
         intentFilter.addAction(ACTION_PLAY_PAUSE)
         intentFilter.addAction(ACTION_UPDATE_NOTIFICATION)
+        intentFilter.addAction(ACTION_EXIT_PIP)
         this.registerReceiver(broadcastReceiver, intentFilter)
     }
 
@@ -280,7 +286,9 @@ class PlayerNotificationService : Service() {
     }
 
     override fun onDestroy() {
+        unregisterBroadcastReceiver()
         contentIntent = null
+        activity = null
         Log.d(DEBUG_TAG, "onDestroy()")
         finish = true
         NotificationManagerCompat.from(this).cancel(NOTIFICATION_ID)
@@ -294,7 +302,6 @@ class PlayerNotificationService : Service() {
         }
         mediaSession = null
         sessionConnector = null
-        unregisterBroadcastReceiver()
         BackgroundModeManager.getInstance().player = null
         stopSelf()
         super.onDestroy()
@@ -336,5 +343,5 @@ class PlayerNotificationService : Service() {
 const val ACTION_CLOSE: String = "PlayerNotificationService.CLOSE"
 const val ACTION_PLAY_PAUSE: String = "PlayerNotificationService.PLAY_PAUSE"
 const val ACTION_UPDATE_NOTIFICATION: String = "PlayerNotificationService.UPDATE_NOTIFICATION"
-
+const val ACTION_EXIT_PIP: String = "PlayerNotificationService.ACTION_EXIT_PIP"
 const val DEBUG_TAG: String = "VideoPlayerService"

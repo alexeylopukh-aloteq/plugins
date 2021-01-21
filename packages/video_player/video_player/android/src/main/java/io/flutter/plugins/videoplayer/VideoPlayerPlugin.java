@@ -223,6 +223,7 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi, Activit
     } else {
       appActivity.startService(intent);
     }
+    PlayerNotificationService.Companion.init(appActivity);
   }
 
   @Override
