@@ -353,7 +353,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     if (_eventSink != nil) {
         _eventSink(@{@"event" : @"isPlaying"});
         _eventSink(@{@"isPlaying" : @(_isPlaying)});
-
+        
     }
 }
 
@@ -398,12 +398,12 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 }
 
 - (void)moveToFullScreen {
-   // _pictureInPicture = YES;
-
+    // _pictureInPicture = YES;
+    
     UIViewController* vc = [[[UIApplication sharedApplication] keyWindow] rootViewController];
     dispatch_async(dispatch_get_main_queue(), ^{
         [vc presentViewController:self.playerViewController animated:YES completion:^{
-         
+            
         }];
     });
 }
@@ -420,18 +420,18 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 -(void)playerViewControllerDidStartPictureInPicture:(AVPlayerViewController *)playerViewController {
     NSLog(@"Did start pip");
-
+    
 }
 
 -(void)playerViewControllerDidStopPictureInPicture:(AVPlayerViewController *)playerViewController {
     _pictureInPicture = NO;
     NSLog(@"Did stop pip");
-
+    
 }
 -(void)playerViewController:(AVPlayerViewController *)playerViewController restoreUserInterfaceForPictureInPictureStopWithCompletionHandler:(void (^)(BOOL))completionHandler {
     UIViewController* vc = [[[UIApplication sharedApplication] keyWindow] rootViewController];
     NSLog(@"Resume control");
-
+    
     dispatch_async(dispatch_get_main_queue(), ^{
         [vc presentViewController:self.playerViewController animated:YES completion:^{
             completionHandler(YES);
@@ -440,7 +440,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 }
 - (void)playerViewControllerDidEndDismissalTransition:(AVPlayerViewController *)playerViewController {
     NSLog(@"Did end dismiss transaction");
-
+    
 }
 
 - (void)playerViewController:(AVPlayerViewController *)playerViewController
@@ -451,20 +451,18 @@ willEndFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTransi
 
 - (void)playerViewControllerWillBeginDismissalTransition:(AVPlayerViewController *)playerViewController {
     NSLog(@"Will begin dismiss presentation");
-
+    
 }
 - (void)playerViewController:(AVPlayerViewController *)playerViewController
 willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
     NSLog(@"Will begin fullscreen presentation");
-
+    
 }
 
 
 - (void)pause {
-    if (self.pictureInPicture == NO) {
-        _isPlaying = false;
-        [self updatePlayingState];
-    }
+    _isPlaying = false;
+    [self updatePlayingState];
 }
 
 - (int64_t)position {
@@ -680,19 +678,19 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
     nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = message.itemDescription;
     MPMediaItemArtwork *artwork;
     if (message.previewUrl != [NSNull null]) {
-      NSURL* artUrl = [[NSURL alloc] initWithString:message.previewUrl];
-      NSData* artData = [NSData dataWithContentsOfURL:artUrl];
-      UIImage* artImage = [UIImage imageWithData:artData];
-      artwork = [[MPMediaItemArtwork alloc]
-        initWithBoundsSize:artImage.size
-            requestHandler:^UIImage* _Nonnull(CGSize size){
-              return artImage;
-            }];
+        NSURL* artUrl = [[NSURL alloc] initWithString:message.previewUrl];
+        NSData* artData = [NSData dataWithContentsOfURL:artUrl];
+        UIImage* artImage = [UIImage imageWithData:artData];
+        artwork = [[MPMediaItemArtwork alloc]
+                   initWithBoundsSize:artImage.size
+                   requestHandler:^UIImage* _Nonnull(CGSize size){
+            return artImage;
+        }];
     } else {
-      artwork = nil;
+        artwork = nil;
     }
     if (artwork) {
-      nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork;
+        nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork;
     }
     [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = nowPlayingInfo;
 }
@@ -760,18 +758,18 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
 
 - (void)setMixWithOthers:(FLTMixWithOthersMessage*)input
                    error:(FlutterError* _Nullable __autoreleasing*)error {
-   /* if ([input.mixWithOthers boolValue]) {
-        [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback
-                                         withOptions:AVAudioSessionCategoryOptionMixWithOthers
-                                               error:nil];
-    } else {*/
-        [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
+    /* if ([input.mixWithOthers boolValue]) {
+     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback
+     withOptions:AVAudioSessionCategoryOptionMixWithOthers
+     error:nil];
+     } else {*/
+    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
     //}
 }
 
 -(void)moveToPip:(FLTMoveToPip *)input error:(FlutterError *_Nullable *_Nonnull)error {
     FLTVideoPlayer *player = _players[input.textureId];
-   // [player moveToPip];
+    // [player moveToPip];
 }
 - (void)openFullScreen:(FLTOpenFullScreen *)input error:(FlutterError * _Nullable __autoreleasing *)error flutterCallback:(FlutterResult)callback {
     FLTVideoPlayer *player = _players[input.textureId];
