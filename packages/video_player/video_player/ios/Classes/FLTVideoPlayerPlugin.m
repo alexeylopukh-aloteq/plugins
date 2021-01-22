@@ -729,7 +729,7 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
             }
             FLTVideoPlayer *existingPlayer = _players[key];
             if ([existingPlayer.currentAssetUrl.absoluteString isEqualToString:inputUrl.absoluteString] && existingPlayer.pictureInPicture == YES) {
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.01),
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC),
                                dispatch_get_main_queue(), ^{
                     [existingPlayer sendInitialized];
                 });
