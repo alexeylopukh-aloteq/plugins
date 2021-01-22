@@ -96,7 +96,7 @@ static NSDictionary *wrapResult(NSDictionary *result, FlutterError *error) {
     if ((NSNull *)result.previewUrl == [NSNull null]) {
         result.previewUrl = nil;
     }
-    
+    result.shouldPausePipVideo = [dict[@"mute_background_video"] boolValue];
     return result;
 }
 - (NSDictionary *)toMap {

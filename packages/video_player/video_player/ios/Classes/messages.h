@@ -15,6 +15,10 @@ NS_ASSUME_NONNULL_BEGIN
 @class FLTPlaybackSpeedMessage;
 @class FLTPositionMessage;
 @class FLTMixWithOthersMessage;
+@class FLTMoveToPip;
+@class FLTOpenFullScreen;
+@class FLTMoveToBackgroundMode;
+@class FLTDisableBackgroundMode;
 
 @interface FLTTextureMessage : NSObject
 @property(nonatomic, strong, nullable) NSNumber *textureId;
@@ -28,6 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy, nullable) NSString *title;
 @property(nonatomic, copy, nullable) NSString *itemDescription;
 @property(nonatomic, copy, nullable) NSString *previewUrl;
+@property(nonatomic) BOOL shouldPausePipVideo;
 @end
 
 @interface FLTLoopingMessage : NSObject

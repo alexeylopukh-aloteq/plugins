@@ -56,7 +56,7 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 
 
 
-- (instancetype)initWithURL:(NSURL*)url frameUpdater:(FLTFrameUpdater*)frameUpdater;
+- (instancetype)initWithURL:(NSURL*)url frameUpdater:(FLTFrameUpdater*)frameUpdater createMessage:(FLTCreateMessage*)createMessage;
 - (void)play;
 - (void)pause;
 - (void)setIsLooping:(bool)isLooping;
@@ -86,9 +86,9 @@ static NSDictionary *wrapResult(NSDictionary *result, FlutterError *error) {
             errorDict, @"error", nil];
 }
 
-- (instancetype)initWithAsset:(NSString*)asset frameUpdater:(FLTFrameUpdater*)frameUpdater {
+- (instancetype)initWithAsset:(NSString*)asset frameUpdater:(FLTFrameUpdater*)frameUpdater createMessage:(FLTCreateMessage *)message {
     NSString* path = [[NSBundle mainBundle] pathForResource:asset ofType:nil];
-    return [self initWithURL:[NSURL fileURLWithPath:path] frameUpdater:frameUpdater];
+    return [self initWithURL:[NSURL fileURLWithPath:path] frameUpdater:frameUpdater createMessage:message];
 }
 
 - (void)addObservers:(AVPlayerItem*)item {
@@ -340,7 +340,6 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     if (_eventSink != nil) {
         _eventSink(@{@"event" : @"isPlaying"});
         _eventSink(@{@"isPlaying" : @(_isPlaying)});
-        
     }
 }
 
@@ -407,6 +406,10 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 -(void)playerViewControllerDidStartPictureInPicture:(AVPlayerViewController *)playerViewController {
     _pictureInPicture = YES;
     [self enableSystemPlayer];
+    if (_eventSink != nil) {
+        _eventSink(@{@"event" : @"isPlaying"});
+        _eventSink(@{@"isPlaying" : @(_isPlaying)});
+    }
     NSLog(@"Did start pip");
     
     
@@ -415,6 +418,10 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 -(void)playerViewControllerDidStopPictureInPicture:(AVPlayerViewController *)playerViewController {
     _pictureInPicture = NO;
     [self disableSystemPlayer];
+    if (_eventSink != nil) {
+        _eventSink(@{@"event" : @"isPlaying"});
+        _eventSink(@{@"isPlaying" : @(_isPlaying)});
+    }
     NSLog(@"Did stop pip");
     
 }
@@ -707,11 +714,18 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
         } else {
             assetPath = [_registrar lookupKeyForAsset:input.asset];
         }
-        player = [[FLTVideoPlayer alloc] initWithAsset:assetPath frameUpdater:frameUpdater];
+        player = [[FLTVideoPlayer alloc] initWithAsset:assetPath frameUpdater:frameUpdater createMessage:input];
         return [self onPlayerSetup:player frameUpdater:frameUpdater];
     } else if (input.uri) {
         NSURL *inputUrl = [NSURL URLWithString:input.uri];
         for (NSNumber *key in _players.allKeys) {
+            if (input.shouldPausePipVideo == YES) {
+                [_players enumerateKeysAndObjectsUsingBlock:^(NSNumber *key, FLTVideoPlayer *videoPlayer, BOOL* stop) {
+                    if (videoPlayer.pictureInPicture == YES) {
+                        [videoPlayer pause];
+                    }
+                }];
+            }
             FLTVideoPlayer *existingPlayer = _players[key];
             if ([existingPlayer.currentAssetUrl.absoluteString isEqualToString:inputUrl.absoluteString] && existingPlayer.pictureInPicture == YES) {
                 [existingPlayer sendInitialized];
@@ -720,6 +734,7 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
                 return result;
             }
         }
+        
         player = [[FLTVideoPlayer alloc] initWithURL:[NSURL URLWithString:input.uri]
                                         frameUpdater:frameUpdater createMessage:input];
         return [self onPlayerSetup:player frameUpdater:frameUpdater];
@@ -762,6 +777,13 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
 
 - (void)setVolume:(FLTVolumeMessage*)input error:(FlutterError**)error {
     FLTVideoPlayer* player = _players[input.textureId];
+    if (input.volume.doubleValue > 0.0) {
+        [_players enumerateKeysAndObjectsUsingBlock:^(NSNumber *key, FLTVideoPlayer *videoPlayer, BOOL* stop) {
+            if (videoPlayer.pictureInPicture == YES) {
+                [videoPlayer pause];
+            }
+        }];
+    }
     [player setVolume:[input.volume doubleValue]];
 }
 
