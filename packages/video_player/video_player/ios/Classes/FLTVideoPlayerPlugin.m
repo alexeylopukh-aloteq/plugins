@@ -180,7 +180,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
         (id)kCVPixelBufferIOSurfacePropertiesKey : @{}
     };
     _videoOutput = [[AVPlayerItemVideoOutput alloc] initWithPixelBufferAttributes:pixBuffAttributes];
-    
+    _videoOutput.suppressesPlayerRendering = YES;
     _displayLink = [CADisplayLink displayLinkWithTarget:frameUpdater
                                                selector:@selector(onDisplayLink:)];
     [_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
@@ -304,6 +304,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
             case AVPlayerItemStatusUnknown:
                 break;
             case AVPlayerItemStatusReadyToPlay:
+                
                 [item addOutput:_videoOutput];
                 [self sendInitialized];
                 [self updatePlayingState];
@@ -387,7 +388,6 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     // _pictureInPicture = YES;
     
     UIViewController* vc = [[[UIApplication sharedApplication] keyWindow] rootViewController];
-    self.playerViewController.player.volume = self.player.volume;
     dispatch_async(dispatch_get_main_queue(), ^{
         [vc presentViewController:self.playerViewController animated:YES completion:^{
             
