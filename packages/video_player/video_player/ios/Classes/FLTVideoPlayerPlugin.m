@@ -52,6 +52,8 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 @property(nonatomic) bool pictureInPicture;
 @property(nonatomic) NSURL *currentAssetUrl;
 @property(nonatomic) FlutterResult flutterCallback;
+@property(nonatomic) FLTCreateMessage *createMessage;
+
 
 
 - (instancetype)initWithURL:(NSURL*)url frameUpdater:(FLTFrameUpdater*)frameUpdater;
@@ -186,27 +188,12 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     _displayLink.paused = YES;
 }
 
-- (instancetype)initWithURL:(NSURL*)url frameUpdater:(FLTFrameUpdater*)frameUpdater {
+- (instancetype)initWithURL:(NSURL*)url frameUpdater:(FLTFrameUpdater*)frameUpdater createMessage:(FLTCreateMessage*)createMessage {
     AVPlayerItem* item = [AVPlayerItem playerItemWithURL:url];
     self.currentAssetUrl = url;
+    self.createMessage = createMessage;
     return [self initWithPlayerItem:item frameUpdater:frameUpdater];
 }
-
-
--(void)setupRemoteControlCenter {
-    MPRemoteCommandCenter *commandCenter = [MPRemoteCommandCenter sharedCommandCenter];
-    commandCenter.playCommand.enabled = YES;
-    [commandCenter.playCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        [self play];
-        return MPRemoteCommandHandlerStatusSuccess;
-    }];
-    commandCenter.pauseCommand.enabled = YES;
-    [commandCenter.pauseCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
-        [self pause];
-        return  MPRemoteCommandHandlerStatusSuccess;
-    }];
-}
-
 
 - (CGAffineTransform)fixTransform:(AVAssetTrack*)videoTrack {
     CGAffineTransform transform = videoTrack.preferredTransform;
@@ -283,7 +270,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     self.playerViewController.delegate = self;
     self.playerViewController.view.layer.needsDisplayOnBoundsChange = YES;
     self.playerViewController.updatesNowPlayingInfoCenter = NO;
-    [self setupRemoteControlCenter];
+   
     return self;
 }
 
@@ -414,17 +401,20 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 //AVViewController delegate
 -(void)playerViewControllerWillStartPictureInPicture:(AVPlayerViewController *)playerViewController {
-    _pictureInPicture = YES;
     NSLog(@"Will start pip");
 }
 
 -(void)playerViewControllerDidStartPictureInPicture:(AVPlayerViewController *)playerViewController {
+    _pictureInPicture = YES;
+    [self enableSystemPlayer];
     NSLog(@"Did start pip");
+    
     
 }
 
 -(void)playerViewControllerDidStopPictureInPicture:(AVPlayerViewController *)playerViewController {
     _pictureInPicture = NO;
+    [self disableSystemPlayer];
     NSLog(@"Did stop pip");
     
 }
@@ -573,6 +563,74 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
     }
 }
 
+
+-(void)setRemoteControlCenterEnabled:(BOOL)enabled {
+    MPRemoteCommandCenter *commandCenter = [MPRemoteCommandCenter sharedCommandCenter];
+    commandCenter.playCommand.enabled = enabled;
+    [commandCenter.playCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+        [self play];
+        return MPRemoteCommandHandlerStatusSuccess;
+    }];
+    commandCenter.pauseCommand.enabled = enabled;
+    [commandCenter.pauseCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+        [self pause];
+        return  MPRemoteCommandHandlerStatusSuccess;
+    }];
+    
+    commandCenter.changePlaybackPositionCommand.enabled = enabled;
+    [commandCenter.changePlaybackPositionCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
+        [self seekTo:((MPChangePlaybackPositionCommandEvent*)event).positionTime * 1000];
+        return MPRemoteCommandHandlerStatusSuccess;
+    }];
+    
+    if (enabled == NO) {
+        [commandCenter.playCommand removeTarget:nil];
+        [commandCenter.pauseCommand removeTarget:nil];
+        [commandCenter.changePlaybackPositionCommand removeTarget:nil];
+    }
+}
+
+- (void) updateNowPlayingInfoWith:(FLTCreateMessage*)message {
+    NSMutableDictionary *nowPlayingInfo = [NSMutableDictionary new];
+    nowPlayingInfo[MPMediaItemPropertyTitle] = message.title;
+    nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = message.itemDescription;
+    MPMediaItemArtwork *artwork;
+    if (message.previewUrl != [NSNull null]) {
+        NSURL* artUrl = [[NSURL alloc] initWithString:message.previewUrl];
+        NSData* artData = [NSData dataWithContentsOfURL:artUrl];
+        UIImage* artImage = [UIImage imageWithData:artData];
+        artwork = [[MPMediaItemArtwork alloc]
+                   initWithBoundsSize:artImage.size
+                   requestHandler:^UIImage* _Nonnull(CGSize size){
+            return artImage;
+        }];
+    } else {
+        artwork = nil;
+    }
+    if (artwork) {
+        nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork;
+    }
+    nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = [NSNumber numberWithInt:([self position] / 1000)];
+    nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = [NSNumber numberWithLongLong: ([self duration] / 1000)];
+
+    [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = nowPlayingInfo;
+}
+
+
+
+
+- (void)enableSystemPlayer {
+    [self setRemoteControlCenterEnabled:YES];
+    if (self.createMessage != nil) {
+        [self updateNowPlayingInfoWith: self.createMessage];
+    }
+}
+
+- (void)disableSystemPlayer {
+    [self setRemoteControlCenterEnabled:NO];
+    [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = nil;
+}
+
 @end
 
 @interface FLTVideoPlayerPlugin () <FLTVideoPlayerApi>
@@ -662,9 +720,8 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
                 return result;
             }
         }
-        [self updateNowPlayingInfoWith:input];
         player = [[FLTVideoPlayer alloc] initWithURL:[NSURL URLWithString:input.uri]
-                                        frameUpdater:frameUpdater];
+                                        frameUpdater:frameUpdater createMessage:input];
         return [self onPlayerSetup:player frameUpdater:frameUpdater];
     } else {
         *error = [FlutterError errorWithCode:@"video_player" message:@"not implemented" details:nil];
@@ -672,28 +729,7 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
     }
 }
 
-- (void) updateNowPlayingInfoWith:(FLTCreateMessage*)message {
-    NSMutableDictionary *nowPlayingInfo = [NSMutableDictionary new];
-    nowPlayingInfo[MPMediaItemPropertyTitle] = message.title;
-    nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = message.itemDescription;
-    MPMediaItemArtwork *artwork;
-    if (message.previewUrl != [NSNull null]) {
-        NSURL* artUrl = [[NSURL alloc] initWithString:message.previewUrl];
-        NSData* artData = [NSData dataWithContentsOfURL:artUrl];
-        UIImage* artImage = [UIImage imageWithData:artData];
-        artwork = [[MPMediaItemArtwork alloc]
-                   initWithBoundsSize:artImage.size
-                   requestHandler:^UIImage* _Nonnull(CGSize size){
-            return artImage;
-        }];
-    } else {
-        artwork = nil;
-    }
-    if (artwork) {
-        nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork;
-    }
-    [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = nowPlayingInfo;
-}
+
 
 - (void)dispose:(FLTTextureMessage*)input error:(FlutterError**)error {
     FLTVideoPlayer* player = _players[input.textureId];
@@ -771,7 +807,7 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
     FLTVideoPlayer *player = _players[input.textureId];
     // [player moveToPip];
 }
-- (void)openFullScreen:(FLTOpenFullScreen *)input error:(FlutterError * _Nullable __autoreleasing *)error flutterCallback:(FlutterResult)callback {
+-(void)openFullScreen:(FLTOpenFullScreen *)input error:(FlutterError *_Nullable *_Nonnull)error flutterCallback:(FlutterResult)callback {
     FLTVideoPlayer *player = _players[input.textureId];
     player.flutterCallback = callback;
     [_players enumerateKeysAndObjectsUsingBlock:^(NSNumber *key, FLTVideoPlayer *videoPlayer, BOOL* stop) {
@@ -794,5 +830,14 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
     });
 }
 
+-(void)moveToBackgroundMode:(FLTMoveToBackgroundMode *)input error:(FlutterError *_Nullable *_Nonnull)error{
+    FLTVideoPlayer *player = _players[input.textureId];
+    [player enableSystemPlayer];
+}
+
+-(void)disableBackgroundMode:(FLTDisableBackgroundMode *)input error:(FlutterError *_Nullable *_Nonnull)error {
+    FLTVideoPlayer *player = _players[input.textureId];
+    [player disableSystemPlayer];
+}
 
 @end

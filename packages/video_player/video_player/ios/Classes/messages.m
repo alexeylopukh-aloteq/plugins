@@ -234,8 +234,8 @@ static NSDictionary *wrapResult(NSDictionary *result, FlutterError *error) {
 
 
 @implementation FLTOpenFullScreen
-+ (FLTMoveToPip *)fromMap:(NSDictionary *)dict {
-    FLTMoveToPip *result = [[FLTMoveToPip alloc] init];
++ (FLTOpenFullScreen *)fromMap:(NSDictionary *)dict {
+    FLTOpenFullScreen *result = [[FLTOpenFullScreen alloc] init];
     result.textureId = dict[@"textureId"];
     if ((NSNull *)result.textureId == [NSNull null]) {
         result.textureId = nil;
@@ -248,8 +248,41 @@ static NSDictionary *wrapResult(NSDictionary *result, FlutterError *error) {
             @"textureId",nil];
     
 }
+@end
 
 
+@implementation FLTMoveToBackgroundMode
++ (FLTMoveToBackgroundMode *)fromMap:(NSDictionary *)dict {
+    FLTMoveToBackgroundMode *result = [[FLTMoveToBackgroundMode alloc] init];
+    result.textureId = dict[@"textureId"];
+    if ((NSNull *)result.textureId == [NSNull null]) {
+        result.textureId = nil;
+    }
+    return result;
+}
+- (NSDictionary *)toMap {
+    return [NSDictionary
+            dictionaryWithObjectsAndKeys:(self.textureId != nil ? self.textureId : [NSNull null]),
+            @"textureId",nil];
+    
+}
+@end
+
+@implementation FLTDisableBackgroundMode
++ (FLTDisableBackgroundMode *)fromMap:(NSDictionary *)dict {
+    FLTDisableBackgroundMode *result = [[FLTDisableBackgroundMode alloc] init];
+    result.textureId = dict[@"textureId"];
+    if ((NSNull *)result.textureId == [NSNull null]) {
+        result.textureId = nil;
+    }
+    return result;
+}
+- (NSDictionary *)toMap {
+    return [NSDictionary
+            dictionaryWithObjectsAndKeys:(self.textureId != nil ? self.textureId : [NSNull null]),
+            @"textureId",nil];
+    
+}
 @end
 
 void FLTVideoPlayerApiSetup(id<FlutterBinaryMessenger> binaryMessenger, id<FLTVideoPlayerApi> api) {
@@ -445,6 +478,39 @@ void FLTVideoPlayerApiSetup(id<FlutterBinaryMessenger> binaryMessenger, id<FLTVi
                 FLTOpenFullScreen *input = [FLTOpenFullScreen fromMap:message];
                 [api openFullScreen:input error:&error flutterCallback : callback];
               //  callback(wrapResult(nil, error));
+            }];
+        } else {
+            [channel setMessageHandler:nil];
+        }
+    }
+    
+    
+    {
+        FlutterBasicMessageChannel *channel = [FlutterBasicMessageChannel
+                                               messageChannelWithName:@"dev.flutter.pigeon.VideoPlayerApi.moveToBackgroundMode"
+                                               binaryMessenger:binaryMessenger];
+        if (api) {
+            [channel setMessageHandler:^(id _Nullable message, FlutterReply callback) {
+                FlutterError *error;
+                FLTMoveToBackgroundMode *input = [FLTMoveToBackgroundMode fromMap:message];
+                [api moveToBackgroundMode:input error:&error];
+                callback(wrapResult(nil, error));
+            }];
+        } else {
+            [channel setMessageHandler:nil];
+        }
+    }
+    
+    {
+        FlutterBasicMessageChannel *channel = [FlutterBasicMessageChannel
+                                               messageChannelWithName:@"dev.flutter.pigeon.VideoPlayerApi.disableBackgroundMode"
+                                               binaryMessenger:binaryMessenger];
+        if (api) {
+            [channel setMessageHandler:^(id _Nullable message, FlutterReply callback) {
+                FlutterError *error;
+                FLTDisableBackgroundMode *input = [FLTDisableBackgroundMode fromMap:message];
+                [api disableBackgroundMode:input error:&error];
+                callback(wrapResult(nil, error));
             }];
         } else {
             [channel setMessageHandler:nil];

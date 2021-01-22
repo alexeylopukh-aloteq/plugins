@@ -60,7 +60,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface FLTOpenFullScreen : NSObject
 @property(nonatomic, strong, nullable) NSNumber *textureId;
+@end
 
+@interface FLTMoveToBackgroundMode : NSObject
+@property(nonatomic, strong, nullable) NSNumber *textureId;
+@end
+
+@interface FLTDisableBackgroundMode : NSObject
+@property(nonatomic, strong, nullable) NSNumber *textureId;
 @end
 
 
@@ -83,6 +90,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 -(void)moveToPip:(FLTMoveToPip *)input error:(FlutterError *_Nullable *_Nonnull)error;
 -(void)openFullScreen:(FLTOpenFullScreen *)input error:(FlutterError *_Nullable *_Nonnull)error flutterCallback:(FlutterResult)callback;
+-(void)moveToBackgroundMode:(FLTMoveToBackgroundMode *)input error:(FlutterError *_Nullable *_Nonnull)error;
+-(void)disableBackgroundMode:(FLTDisableBackgroundMode *)input error:(FlutterError *_Nullable *_Nonnull)error;
 @end
 
 extern void FLTVideoPlayerApiSetup(id<FlutterBinaryMessenger> binaryMessenger,
