@@ -270,6 +270,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     self.playerViewController.delegate = self;
     self.playerViewController.view.layer.needsDisplayOnBoundsChange = YES;
     self.playerViewController.updatesNowPlayingInfoCenter = NO;
+    
    
     return self;
 }
@@ -728,7 +729,10 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
             }
             FLTVideoPlayer *existingPlayer = _players[key];
             if ([existingPlayer.currentAssetUrl.absoluteString isEqualToString:inputUrl.absoluteString] && existingPlayer.pictureInPicture == YES) {
-                [existingPlayer sendInitialized];
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.01),
+                               dispatch_get_main_queue(), ^{
+                    [existingPlayer sendInitialized];
+                });
                 FLTTextureMessage* result = [[FLTTextureMessage alloc] init];
                 result.textureId = @([key longValue]);
                 return result;
