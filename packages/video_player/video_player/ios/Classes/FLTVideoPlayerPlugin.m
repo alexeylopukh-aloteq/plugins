@@ -45,7 +45,6 @@ int64_t FLTCMTimeToMillis(CMTime time) {
 @property(nonatomic) FlutterEventSink eventSink;
 @property(nonatomic) CGAffineTransform preferredTransform;
 @property(nonatomic, readonly) bool disposed;
-@property(nonatomic, readonly) bool isPlaying;
 @property(nonatomic) bool isLooping;
 @property(nonatomic, readonly) bool isInitialized;
 @property(nonatomic) AVPlayerViewController *playerViewController;
@@ -222,7 +221,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     self = [super init];
     NSAssert(self, @"super init cannot be nil");
     _isInitialized = false;
-    _isPlaying = false;
+    //_isPlaying = false;
     _disposed = false;
     
     AVAsset* asset = [item asset];
@@ -270,8 +269,8 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     self.playerViewController.delegate = self;
     self.playerViewController.view.layer.needsDisplayOnBoundsChange = YES;
     self.playerViewController.updatesNowPlayingInfoCenter = NO;
-    
-   
+    self.playerViewController.entersFullScreenWhenPlaybackBegins = NO;
+    self.playerViewController.exitsFullScreenWhenPlaybackEnds = YES;
     return self;
 }
 
@@ -332,15 +331,15 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     if (!_isInitialized) {
         return;
     }
-    if (_isPlaying) {
-        [_player play];
-    } else {
-        [_player pause];
-    }
-    _displayLink.paused = !_isPlaying;
+//    if ([self isPlayingReally]) {
+//        [_player play];
+//    } else {
+//        [_player pause];
+//    }
+    _displayLink.paused = ![self isPlayingReally];
     if (_eventSink != nil) {
         _eventSink(@{@"event" : @"isPlaying"});
-        _eventSink(@{@"isPlaying" : @(_isPlaying)});
+        _eventSink(@{@"isPlaying" : @([self isPlayingReally])});
     }
 }
 
@@ -371,7 +370,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 }
 
 - (void)play {
-    _isPlaying = true;
+    [_player play];
     [self updatePlayingState];
 }
 
@@ -388,6 +387,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     // _pictureInPicture = YES;
     
     UIViewController* vc = [[[UIApplication sharedApplication] keyWindow] rootViewController];
+    self.playerViewController.player.volume = self.player.volume;
     dispatch_async(dispatch_get_main_queue(), ^{
         [vc presentViewController:self.playerViewController animated:YES completion:^{
             
@@ -409,7 +409,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     [self enableSystemPlayer];
     if (_eventSink != nil) {
         _eventSink(@{@"event" : @"isPlaying"});
-        _eventSink(@{@"isPlaying" : @(_isPlaying)});
+        _eventSink(@{@"isPlaying" : @([self isPlayingReally])});
     }
     NSLog(@"Did start pip");
     
@@ -421,7 +421,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     [self disableSystemPlayer];
     if (_eventSink != nil) {
         _eventSink(@{@"event" : @"isPlaying"});
-        _eventSink(@{@"isPlaying" : @(_isPlaying)});
+        _eventSink(@{@"isPlaying" : @([self isPlayingReally])});
     }
     NSLog(@"Did stop pip");
     
@@ -459,7 +459,8 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
 
 
 - (void)pause {
-    _isPlaying = false;
+    //_isPlaying = false;
+    [_player pause];
     [self updatePlayingState];
 }
 
@@ -637,6 +638,14 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
 - (void)disableSystemPlayer {
     [self setRemoteControlCenterEnabled:NO];
     [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = nil;
+}
+
+- (BOOL)isPlayingReally {
+    if (self.player.timeControlStatus == AVPlayerTimeControlStatusPaused) {
+        return NO;
+    } else {
+        return YES;
+    }
 }
 
 @end
