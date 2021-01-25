@@ -339,8 +339,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 //    }
     _displayLink.paused = ![self isPlayingReally];
     if (_eventSink != nil) {
-        _eventSink(@{@"event" : @"isPlaying"});
-        _eventSink(@{@"isPlaying" : @([self isPlayingReally])});
+        _eventSink(@{@"event" : @"isPlaying",@"isPlaying" : @([self isPlayingReally])});
     }
 }
 
@@ -408,10 +407,8 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     _pictureInPicture = YES;
     [self enableSystemPlayer];
     if (_eventSink != nil) {
-        _eventSink(@{@"event" : @"isPlaying"});
-        _eventSink(@{@"isPlaying" : @([self isPlayingReally])});
-        _eventSink(@{@"event" : @"isBackgroundMode"});
-        _eventSink(@{@"isBackgroundMode" : @(_pictureInPicture)});
+        _eventSink(@{@"event" : @"isPlaying",@"isPlaying" : @([self isPlayingReally])});
+        _eventSink(@{@"event" : @"isBackgroundMode", @"isBackgroundMode" : @(_pictureInPicture)});
         
     }
     NSLog(@"Did start pip");
@@ -423,10 +420,8 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     _pictureInPicture = NO;
     [self disableSystemPlayer];
     if (_eventSink != nil) {
-        _eventSink(@{@"event" : @"isPlaying"});
-        _eventSink(@{@"isPlaying" : @([self isPlayingReally])});
-        _eventSink(@{@"event" : @"changePipMode"});
-        _eventSink(@{@"isPip" : @(_pictureInPicture)});
+        _eventSink(@{@"event" : @"isPlaying",@"isPlaying" : @([self isPlayingReally])});
+        _eventSink(@{@"event" : @"isBackgroundMode", @"isBackgroundMode" : @(_pictureInPicture)});
     }
     NSLog(@"Did stop pip");
     
