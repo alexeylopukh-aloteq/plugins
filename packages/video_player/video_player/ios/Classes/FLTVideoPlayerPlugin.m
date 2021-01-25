@@ -410,8 +410,8 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     if (_eventSink != nil) {
         _eventSink(@{@"event" : @"isPlaying"});
         _eventSink(@{@"isPlaying" : @([self isPlayingReally])});
-        _eventSink(@{@"event" : @"changePipMode"});
-        _eventSink(@{@"isPip" : @(_pictureInPicture)});
+        _eventSink(@{@"event" : @"isBackgroundMode"});
+        _eventSink(@{@"isBackgroundMode" : @(_pictureInPicture)});
         
     }
     NSLog(@"Did start pip");
