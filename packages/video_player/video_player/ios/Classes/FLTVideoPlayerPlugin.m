@@ -405,6 +405,10 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 -(void)playerViewControllerDidStartPictureInPicture:(AVPlayerViewController *)playerViewController {
     _pictureInPicture = YES;
+    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback
+    withOptions:0
+    error:nil];
+    [[AVAudioSession sharedInstance]setActive:YES error:nil];
     [self enableSystemPlayer];
     if (_eventSink != nil) {
         _eventSink(@{@"event" : @"isPlaying",@"isPlaying" : @([self isPlayingReally])});
@@ -418,6 +422,10 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
 -(void)playerViewControllerDidStopPictureInPicture:(AVPlayerViewController *)playerViewController {
     _pictureInPicture = NO;
+    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback
+    withOptions:AVAudioSessionCategoryOptionMixWithOthers
+    error:nil];
+    [[AVAudioSession sharedInstance]setActive:YES error:nil];
     [self disableSystemPlayer];
     if (_eventSink != nil) {
         _eventSink(@{@"event" : @"isPlaying",@"isPlaying" : @([self isPlayingReally])});
