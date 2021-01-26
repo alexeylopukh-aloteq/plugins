@@ -316,8 +316,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
       switch (event.eventType) {
         case VideoEventType.initialized:
-          if (initializingCompleter != null && initializingCompleter.isCompleted)
-            return;
+          if (initializingCompleter != null && initializingCompleter.isCompleted) return;
           value = value.copyWith(
               duration: event.duration,
               size: event.size,
@@ -344,6 +343,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           value = value.copyWith(isPlaying: event.isPlaying);
           break;
         case VideoEventType.backgroundMode:
+          value = value.copyWith(backgroundMode: event.isInBackground == true);
+          break;
         case VideoEventType.unknown:
           break;
       }
@@ -390,7 +391,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// Open fullscreen mode
   Future<bool> openFullScreenMode() async {
     final result = await _videoPlayerPlatform.openFullScreenMode(_textureId);
-    if (result['result'] != null && result['result']["isPlaying"] != null){
+    if (result['result'] != null && result['result']["isPlaying"] != null) {
       return result['result']["isPlaying"] == true;
     } else
       return false;
