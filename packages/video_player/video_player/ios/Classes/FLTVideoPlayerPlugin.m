@@ -446,13 +446,12 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 }
 - (void)playerViewControllerDidEndDismissalTransition:(AVPlayerViewController *)playerViewController {
     NSLog(@"Did end dismiss transaction");
-    
 }
 
 - (void)playerViewController:(AVPlayerViewController *)playerViewController
 willEndFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
-    NSLog(@"Will end dismiss presentation");
-    self.flutterCallback(wrapResult(nil, nil));
+    NSLog(@"Will end full screen presentation");
+    self.flutterCallback(wrapResult(@{@"isPlaying" : @([self isPlayingReally])}, nil));
 }
 
 - (void)playerViewControllerWillBeginDismissalTransition:(AVPlayerViewController *)playerViewController {
