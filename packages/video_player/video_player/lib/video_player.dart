@@ -388,8 +388,12 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   /// Open fullscreen mode
-  Future<void> openFullScreenMode() async {
-    await _videoPlayerPlatform.openFullScreenMode(_textureId);
+  Future<bool> openFullScreenMode() async {
+    final result = await _videoPlayerPlatform.openFullScreenMode(_textureId);
+    if (result['result'] != null && result['result']["isPlaying"] != null){
+      return result['result']["isPlaying"] == true;
+    } else
+      return false;
   }
 
   /// Move current video in pip mode
