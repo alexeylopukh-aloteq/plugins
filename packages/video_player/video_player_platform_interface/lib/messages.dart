@@ -400,7 +400,7 @@ class VideoPlayerApi {
     }
   }
 
-  Future<void> openFullScreenMode(TextureMessage arg) async {
+  Future<dynamic> openFullScreenMode(TextureMessage arg) async {
     final Map<dynamic, dynamic> requestMap = arg._toMap();
     const BasicMessageChannel<dynamic> channel = BasicMessageChannel<dynamic>(
         'dev.flutter.pigeon.VideoPlayerApi.openFullScreenMode', StandardMessageCodec());
@@ -416,7 +416,7 @@ class VideoPlayerApi {
       throw PlatformException(
           code: error['code'], message: error['message'], details: error['details']);
     } else {
-      // noop
+      return replyMap;
     }
   }
 
