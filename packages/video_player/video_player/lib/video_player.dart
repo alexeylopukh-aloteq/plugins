@@ -38,7 +38,7 @@ class VideoPlayerValue {
     this.isLooping = false,
     this.isBuffering = false,
     this.backgroundMode = false,
-    this.volume = 1.0,
+    this.volume = 0.0,
     this.playbackSpeed = 1.0,
     this.errorDescription,
   });
@@ -316,6 +316,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
       switch (event.eventType) {
         case VideoEventType.initialized:
+          if (initializingCompleter != null && initializingCompleter.isCompleted)
+            return;
           value = value.copyWith(
               duration: event.duration,
               size: event.size,
