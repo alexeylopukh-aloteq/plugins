@@ -483,6 +483,14 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
 }
 
 - (void)setVolume:(double)volume {
+    NSLog(@"Setting volume %0.1f", volume);
+    if (volume > 0) {
+        NSError *error;
+        [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback withOptions:0 error:&error];
+        NSLog(@"Error setting category %@", [error localizedDescription]);
+        [[AVAudioSession sharedInstance]setActive:YES error:nil];
+        NSLog(@"Error Activating category %@", [error localizedDescription]);
+    }
     _player.volume = (float)((volume < 0.0) ? 0.0 : ((volume > 1.0) ? 1.0 : volume));
 }
 
@@ -661,6 +669,7 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
     FLTVideoPlayerPlugin* instance = [[FLTVideoPlayerPlugin alloc] initWithRegistrar:registrar];
     [registrar publish:instance];
+    [registrar addApplicationDelegate:instance];
     FLTVideoPlayerApiSetup(registrar.messenger, instance);
 }
 
@@ -869,6 +878,33 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
 -(void)disableBackgroundMode:(FLTDisableBackgroundMode *)input error:(FlutterError *_Nullable *_Nonnull)error {
     FLTVideoPlayer *player = _players[input.textureId];
     [player disableSystemPlayer];
+}
+
+
+-(void)applicationDidBecomeActive:(UIApplication *)application {
+    if ([_players count] > 0) {
+        [_players enumerateKeysAndObjectsUsingBlock:^(NSNumber *key, FLTVideoPlayer *videoPlayer, BOOL* stop) {
+            if ([videoPlayer isPlayingReally] && videoPlayer.player.volume > 0) {
+                [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback
+                withOptions:0
+                error:nil];
+                [[AVAudioSession sharedInstance]setActive:YES error:nil];
+                return;
+                
+            } else {
+                [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback
+                withOptions:AVAudioSessionCategoryOptionMixWithOthers
+                error:nil];
+            }
+            [[AVAudioSession sharedInstance]setActive:YES error:nil];
+
+        }];
+    } else {
+        [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback
+        withOptions:AVAudioSessionCategoryOptionMixWithOthers
+        error:nil];
+        [[AVAudioSession sharedInstance]setActive:YES error:nil];
+    }
 }
 
 @end
