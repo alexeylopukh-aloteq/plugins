@@ -804,7 +804,7 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
     FLTVideoPlayer* player = _players[input.textureId];
     if (input.volume.doubleValue > 0.0) {
         [_players enumerateKeysAndObjectsUsingBlock:^(NSNumber *key, FLTVideoPlayer *videoPlayer, BOOL* stop) {
-            if (videoPlayer.pictureInPicture == YES) {
+            if (videoPlayer.pictureInPicture == YES && player.currentAssetUrl != videoPlayer.currentAssetUrl) {
                 [videoPlayer pause];
             }
         }];

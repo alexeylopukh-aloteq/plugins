@@ -320,9 +320,11 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           value = value.copyWith(
               duration: event.duration,
               size: event.size,
-              backgroundMode: event.isInBackground ?? false);
+              backgroundMode: event.isInBackground ?? false,
+          volume: event.isInBackground == true ? 1 : 0);
           initializingCompleter.complete(null);
           _applyLooping();
+          if (value.backgroundMode != true)
           _applyVolume();
           _applyPlayPause();
           break;
