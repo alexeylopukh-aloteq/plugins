@@ -65,7 +65,7 @@ abstract class VideoPlayerPlatform {
   }
 
   /// Clears one video.
-  Future<void> openFullScreenMode(int textureId) {
+  Future<dynamic> openFullScreenMode(int textureId) {
     throw UnimplementedError('openFullScreenMode() has not been implemented.');
   }
 

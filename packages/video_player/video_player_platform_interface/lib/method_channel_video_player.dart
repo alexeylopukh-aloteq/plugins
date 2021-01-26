@@ -114,7 +114,7 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
-  Future<void> openFullScreenMode(int textureId) {
+  Future<dynamic> openFullScreenMode(int textureId) {
     return _api.openFullScreenMode(TextureMessage()..textureId = textureId);
   }
 
