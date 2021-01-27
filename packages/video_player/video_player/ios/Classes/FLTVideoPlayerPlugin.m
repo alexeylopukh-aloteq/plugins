@@ -879,6 +879,10 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
 
 -(void)moveToBackgroundMode:(FLTMoveToBackgroundMode *)input error:(FlutterError *_Nullable *_Nonnull)error{
     FLTVideoPlayer *player = _players[input.textureId];
+    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback
+    withOptions:0
+    error:nil];
+    [[AVAudioSession sharedInstance]setActive:YES error:nil];
     [player enableSystemPlayer];
 }
 
