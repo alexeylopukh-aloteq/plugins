@@ -43,8 +43,6 @@ class PlayerNotificationService : Service() {
     private var mediaSession: MediaSessionCompat? = null
     private var sessionConnector: MediaSessionConnector? = null
     private lateinit var notificationManager: NotificationManager
-    private var audioManager: AudioManager? = null
-    private lateinit var audioFocusRequest: AudioFocusRequest
 
 
     private var videoBitmap: Bitmap? = null
@@ -72,9 +70,6 @@ class PlayerNotificationService : Service() {
             stopSelf()
             return
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            initAudioFocus()
-        }
         if (activity != null){
             val intent = Intent(activity, activity?.javaClass)
             contentIntent = PendingIntent.getActivity(activity, 0, intent, FLAG_UPDATE_CURRENT)
@@ -86,9 +81,6 @@ class PlayerNotificationService : Service() {
         exoPlayer.addListener(
                 object : Player.EventListener {
                     override fun onIsPlayingChanged(isPlaying: Boolean) {
-                        if (isPlaying && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            audioManager?.requestAudioFocus(audioFocusRequest)
-                        }
                         updateNotification()
                     }
 
@@ -296,10 +288,6 @@ class PlayerNotificationService : Service() {
         sessionConnector?.setPlayer(null)
         mediaSession?.isActive = false
         mediaSession?.release()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            audioManager?.abandonAudioFocusRequest(audioFocusRequest)
-            audioManager = null
-        }
         mediaSession = null
         sessionConnector = null
         BackgroundModeManager.getInstance().player = null
@@ -313,28 +301,6 @@ class PlayerNotificationService : Service() {
         super.onTaskRemoved(rootIntent)
         stopSelf()
     }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun initAudioFocus() {
-        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN).run {
-            setAudioAttributes(AudioAttributes.Builder().run {
-                setUsage(AudioAttributes.USAGE_GAME)
-                setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                build()
-            })
-            setAcceptsDelayedFocusGain(true)
-            setOnAudioFocusChangeListener({
-                when (it) {
-                    AudioManager.AUDIOFOCUS_LOSS -> {
-                        videoPlayer.pause()
-                    }
-                }
-            }, Handler())
-            build()
-        }
-    }
-
 
 }
 

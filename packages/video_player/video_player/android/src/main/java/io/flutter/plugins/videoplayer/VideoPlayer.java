@@ -3,15 +3,18 @@ package io.flutter.plugins.videoplayer;
 import static com.google.android.exoplayer2.Player.REPEAT_MODE_ALL;
 import static com.google.android.exoplayer2.Player.REPEAT_MODE_OFF;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Surface;
-import android.view.View;
 
-import androidx.core.app.NotificationCompat;
+import androidx.annotation.RequiresApi;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlaybackException;
@@ -21,7 +24,6 @@ import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.Player.EventListener;
 import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.ProgressiveMediaSource;
 import com.google.android.exoplayer2.source.dash.DashMediaSource;
@@ -49,13 +51,13 @@ final public class VideoPlayer {
   private static final String FORMAT_HLS = "hls";
   private static final String FORMAT_OTHER = "other";
 
-  private SimpleExoPlayer exoPlayer;
+  private final SimpleExoPlayer exoPlayer;
 
   private Surface surface;
 
   final TextureRegistry.SurfaceTextureEntry textureEntry;
 
-  private QueuingEventSink eventSink = new QueuingEventSink();
+  private final QueuingEventSink eventSink = new QueuingEventSink();
 
   private final EventChannel eventChannel;
 
@@ -70,6 +72,9 @@ final public class VideoPlayer {
   public final String previewUrl;
 
   private int usageCount = 1;
+
+  private AudioManager audioManager;
+  private AudioFocusRequest audioFocusRequest;
 
   public void incUsageCount() {
     usageCount++;
@@ -115,6 +120,10 @@ final public class VideoPlayer {
     exoPlayer.prepare();
 
     setupVideoPlayer(eventChannel, textureEntry);
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      initAudioFocus(context);
+    }
   }
 
   private static boolean isHTTP(Uri uri) {
@@ -198,10 +207,15 @@ final public class VideoPlayer {
 
           @Override
           public void onIsPlayingChanged(boolean isPlaying) {
+            if (isPlaying && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                    && audioManager != null && exoPlayer.getVolume() > 0) {
+              audioManager.requestAudioFocus(audioFocusRequest);
+            }
             Map<String, Object> event = new HashMap<>();
             event.put("event", "isPlaying");
             event.put("isPlaying", isPlaying);
             eventSink.success(event);
+
           }
 
           @Override
@@ -242,7 +256,8 @@ final public class VideoPlayer {
   private static void setAudioAttributes(SimpleExoPlayer exoPlayer, boolean isMixMode) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
       exoPlayer.setAudioAttributes(
-          new AudioAttributes.Builder().setContentType(C.CONTENT_TYPE_MOVIE).build(), !isMixMode);
+          new com.google.android.exoplayer2.audio.AudioAttributes.Builder()
+                  .setContentType(C.CONTENT_TYPE_MOVIE).build(), !isMixMode);
     } else {
       exoPlayer.setAudioStreamType(C.STREAM_TYPE_MUSIC);
     }
@@ -261,6 +276,10 @@ final public class VideoPlayer {
   }
 
   void setVolume(double value) {
+    if (value > 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+            && audioManager != null && exoPlayer.isPlaying()){
+        audioManager.requestAudioFocus(audioFocusRequest);
+    }
     float bracketedValue = (float) Math.max(0.0, Math.min(1.0, value));
     exoPlayer.setVolume(bracketedValue);
   }
@@ -310,6 +329,25 @@ final public class VideoPlayer {
     return exoPlayer;
   }
 
+  @RequiresApi(Build.VERSION_CODES.O)
+  private void initAudioFocus(Context context) {
+    audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+    AudioAttributes mPlaybackAttributes = new AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_MEDIA)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+            .build();
+    audioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+            .setAudioAttributes(mPlaybackAttributes)
+            .setAcceptsDelayedFocusGain(true)
+            .setWillPauseWhenDucked(true)
+            .setOnAudioFocusChangeListener(i -> {
+              if (i == AudioManager.AUDIOFOCUS_LOSS && backgroundMode) {
+                pause();
+              }
+            }, new Handler())
+            .build();
+  }
+
   void dispose() {
     Log.d("dispose", "call");
     usageCount--;
@@ -326,6 +364,10 @@ final public class VideoPlayer {
     }
     if (exoPlayer != null) {
       exoPlayer.release();
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      audioManager.abandonAudioFocusRequest(audioFocusRequest);
+      audioManager = null;
     }
   }
 }
