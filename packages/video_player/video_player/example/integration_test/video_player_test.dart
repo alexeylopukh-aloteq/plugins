@@ -3,8 +3,8 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:integration_test/integration_test.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:integration_test/integration_test.dart';
 import 'package:video_player/video_player.dart';
 
 const Duration _playDuration = Duration(seconds: 1);
@@ -16,7 +16,7 @@ void main() {
 
   group('asset videos', () {
     setUp(() {
-      _controller = VideoPlayerController.asset('assets/Butterfly-209.mp4');
+      _controller = VideoPlayerController.asset('assets/Butterfly-209.mp4', '', '', '');
     });
 
     testWidgets('can be initialized', (WidgetTester tester) async {
@@ -25,8 +25,7 @@ void main() {
       expect(_controller.value.initialized, true);
       expect(_controller.value.position, const Duration(seconds: 0));
       expect(_controller.value.isPlaying, false);
-      expect(_controller.value.duration,
-          const Duration(seconds: 7, milliseconds: 540));
+      expect(_controller.value.duration, const Duration(seconds: 7, milliseconds: 540));
     });
 
     testWidgets(
@@ -72,8 +71,7 @@ void main() {
       },
     );
 
-    testWidgets('test video player view with local asset',
-        (WidgetTester tester) async {
+    testWidgets('test video player view with local asset', (WidgetTester tester) async {
       Future<bool> started() async {
         await _controller.initialize();
         await _controller.play();

@@ -357,10 +357,14 @@ final public class VideoPlayer {
     if (isInitialized) {
       exoPlayer.stop();
     }
+    try {
     textureEntry.release();
+    }catch (Exception ignored){}
     eventChannel.setStreamHandler(null);
     if (surface != null) {
-      surface.release();
+      try {
+        surface.release();
+      } catch (Exception ignored){}
     }
     if (exoPlayer != null) {
       exoPlayer.release();
