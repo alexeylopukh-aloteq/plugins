@@ -50,6 +50,7 @@ class PlayerNotificationService : Service() {
     private var contentIntent: PendingIntent? = null
 
     private var finish = false
+    private var isInit = false;
 
     companion object {
         private var activity: Activity? = null
@@ -62,7 +63,13 @@ class PlayerNotificationService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.d(DEBUG_TAG, "onCreate()")
+        startCommand()
+    }
+
+    private fun startCommand() {
+        if (isInit)
+            return
+        isInit = true
         if (BackgroundModeManager.getInstance().player != null) {
             videoPlayer = BackgroundModeManager.getInstance().player!!
             exoPlayer = videoPlayer.exoPlayer
@@ -274,7 +281,16 @@ class PlayerNotificationService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        return START_STICKY
+        if (intent == null) {
+            return START_NOT_STICKY;
+        }
+        val command = intent.getIntExtra(MAIN_SERVICE_COMMAND_KEY, -1);
+
+        if (command == MAIN_SERVICE_START_COMMAND) {
+            startCommand();
+            return START_STICKY;
+        }
+        return START_NOT_STICKY;
     }
 
     override fun onDestroy() {
@@ -310,4 +326,6 @@ const val ACTION_CLOSE: String = "PlayerNotificationService.CLOSE"
 const val ACTION_PLAY_PAUSE: String = "PlayerNotificationService.PLAY_PAUSE"
 const val ACTION_UPDATE_NOTIFICATION: String = "PlayerNotificationService.UPDATE_NOTIFICATION"
 const val ACTION_EXIT_PIP: String = "PlayerNotificationService.ACTION_EXIT_PIP"
+const val MAIN_SERVICE_COMMAND_KEY: String = "MAIN_SERVICE_COMMAND_KEY"
+const val MAIN_SERVICE_START_COMMAND: Int = 1
 const val DEBUG_TAG: String = "VideoPlayerService"

@@ -6,12 +6,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application>
-        <activity
-            android:name=".PipActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-            android:supportsPictureInPicture="true"
-            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
-            tools:targetApi="n" />
         <service android:name=".PlayerNotificationService" />
     </application>
 

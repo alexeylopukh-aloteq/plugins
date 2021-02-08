@@ -15,6 +15,7 @@ import android.os.Handler;
 import android.util.LongSparseArray;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 
 import io.flutter.FlutterInjector;
 import io.flutter.Log;
@@ -40,6 +41,8 @@ import java.util.List;
 import javax.net.ssl.HttpsURLConnection;
 
 import static io.flutter.plugins.videoplayer.Messages.PIP_NOT_ALLOWED_MESSAGE;
+import static io.flutter.plugins.videoplayer.PlayerNotificationServiceKt.MAIN_SERVICE_COMMAND_KEY;
+import static io.flutter.plugins.videoplayer.PlayerNotificationServiceKt.MAIN_SERVICE_START_COMMAND;
 
 /** Android platform implementation of the VideoPlayerPlugin. */
 public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi, ActivityAware {
@@ -215,16 +218,13 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi, Activit
       throw new Exception(PIP_NOT_ALLOWED_MESSAGE);
     }
     VideoPlayer player = videoPlayers.get(arg.getTextureId());
-    BackgroundModeManager.Companion.getInstance().setPlayer(player);
-    Intent intent = new Intent(appActivity, PlayerNotificationService.class);
+    startAudioService(player);
+    PictureInPictureParams params = null;
     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-      appActivity.startForegroundService(intent);
-      PictureInPictureParams params = new PictureInPictureParams.Builder().build();
+      params = new PictureInPictureParams.Builder().build();
       appActivity.enterPictureInPictureMode(params);
-    } else {
-      appActivity.startService(intent);
     }
-    PlayerNotificationService.Companion.init(appActivity);
+
   }
 
   @Override
@@ -243,13 +243,14 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi, Activit
       appActivity.stopService(intent);
     }
     VideoPlayer player = videoPlayers.get(arg.getTextureId());
+    startAudioService(player);
+  }
+
+  void startAudioService(VideoPlayer player) {
     BackgroundModeManager.Companion.getInstance().setPlayer(player);
     Intent intent = new Intent(appActivity, PlayerNotificationService.class);
-    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-      appActivity.startForegroundService(intent);
-    } else {
-      appActivity.startService(intent);
-    }
+    intent.putExtra(MAIN_SERVICE_COMMAND_KEY, MAIN_SERVICE_START_COMMAND);
+    ContextCompat.startForegroundService(appActivity, intent);
     PlayerNotificationService.Companion.init(appActivity);
   }
 
