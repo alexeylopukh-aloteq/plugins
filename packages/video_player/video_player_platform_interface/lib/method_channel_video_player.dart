@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/services.dart';
@@ -158,7 +159,13 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
 
   @override
   Widget buildView(int textureId) {
-    return Texture(textureId: textureId);
+    if (textureId == null) {
+      return Container();
+    } else if (Platform.isIOS) {
+      return Texture(textureId: textureId);
+    } else {
+      return AndroidView(viewType: 'flutter.io/videoPlayer/nativeView$textureId');
+    }
   }
 
   @override

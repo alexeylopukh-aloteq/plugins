@@ -38,6 +38,8 @@ import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 import io.flutter.plugin.common.EventChannel;
+import io.flutter.plugin.platform.PlatformView;
+import io.flutter.plugins.videoplayer.player_view.VideoPlayerTextureView;
 import io.flutter.view.TextureRegistry;
 import java.util.Arrays;
 import java.util.Collections;
@@ -53,9 +55,11 @@ final public class VideoPlayer {
 
   private final SimpleExoPlayer exoPlayer;
 
-  private Surface surface;
+//  private Surface surface;
 
-  final TextureRegistry.SurfaceTextureEntry textureEntry;
+  private final PlatformView platformView;
+
+//  final TextureRegistry.SurfaceTextureEntry textureEntry;
 
   private final QueuingEventSink eventSink = new QueuingEventSink();
 
@@ -84,21 +88,22 @@ final public class VideoPlayer {
   VideoPlayer(
       Context context,
       EventChannel eventChannel,
-      TextureRegistry.SurfaceTextureEntry textureEntry,
+//      TextureRegistry.SurfaceTextureEntry textureEntry,
       String dataSource,
       String formatHint,
       VideoPlayerOptions options,
       String title,
       String description,
-      String previewUrl) {
+      String previewUrl,
+  SimpleExoPlayer exoPlayer) {
     this.eventChannel = eventChannel;
-    this.textureEntry = textureEntry;
+//    this.textureEntry = textureEntry;
     this.options = options;
     this.title = title;
     this.description = description;
     this.previewUrl = previewUrl;
-
-    exoPlayer = new SimpleExoPlayer.Builder(context).build();
+    platformView = new VideoPlayerTextureView(context, exoPlayer);
+    this.exoPlayer = exoPlayer;
 
     Uri uri = Uri.parse(dataSource);
 
@@ -119,7 +124,7 @@ final public class VideoPlayer {
     exoPlayer.setMediaSource(mediaSource);
     exoPlayer.prepare();
 
-    setupVideoPlayer(eventChannel, textureEntry);
+    setupVideoPlayer(eventChannel);
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       initAudioFocus(context);
@@ -183,7 +188,7 @@ final public class VideoPlayer {
   }
 
   private void setupVideoPlayer(
-      EventChannel eventChannel, TextureRegistry.SurfaceTextureEntry textureEntry) {
+      EventChannel eventChannel) {
 
     eventChannel.setStreamHandler(
         new EventChannel.StreamHandler() {
@@ -198,8 +203,8 @@ final public class VideoPlayer {
           }
         });
 
-    surface = new Surface(textureEntry.surfaceTexture());
-    exoPlayer.setVideoSurface(surface);
+//    surface = new Surface(textureEntry.surfaceTexture());
+//    exoPlayer.setVideoSurface(surface);
     setAudioAttributes(exoPlayer, options.mixWithOthers);
 
     exoPlayer.addListener(
@@ -357,15 +362,15 @@ final public class VideoPlayer {
     if (isInitialized) {
       exoPlayer.stop();
     }
-    try {
-    textureEntry.release();
-    }catch (Exception ignored){}
+//    try {
+//    textureEntry.release();
+//    }catch (Exception ignored){}
     eventChannel.setStreamHandler(null);
-    if (surface != null) {
-      try {
-        surface.release();
-      } catch (Exception ignored){}
-    }
+//    if (surface != null) {
+//      try {
+//        surface.release();
+//      } catch (Exception ignored){}
+//    }
     if (exoPlayer != null) {
       exoPlayer.release();
     }
