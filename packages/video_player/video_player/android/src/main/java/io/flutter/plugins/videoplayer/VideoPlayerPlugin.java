@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.LongSparseArray;
 
 import androidx.annotation.NonNull;
@@ -229,7 +230,9 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi, Activit
       throw new Exception(PIP_NOT_ALLOWED_MESSAGE);
     }
     VideoPlayer player = videoPlayers.get(arg.getTextureId());
-    startAudioService(player);
+    final Handler handler = new Handler(Looper.getMainLooper());
+    handler.postDelayed(() -> startAudioService(player), 1000);
+
     PictureInPictureParams params = null;
     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
       params = new PictureInPictureParams.Builder().build();
