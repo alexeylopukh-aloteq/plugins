@@ -321,11 +321,10 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
               duration: event.duration,
               size: event.size,
               backgroundMode: event.isInBackground ?? false,
-          volume: event.isInBackground == true ? 1 : 0);
+              volume: event.isInBackground == true ? 1 : 0);
           initializingCompleter.complete(null);
           _applyLooping();
-          if (value.backgroundMode != true)
-          _applyVolume();
+          if (value.backgroundMode != true) _applyVolume();
           _applyPlayPause();
           break;
         case VideoEventType.completed:
@@ -680,15 +679,19 @@ class _VideoPlayerState extends State<VideoPlayer> {
   @override
   void didUpdateWidget(VideoPlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    oldWidget.controller.removeListener(_listener);
-    _textureId = widget.controller.textureId;
-    widget.controller.addListener(_listener);
+    if (!oldWidget.controller._isDisposed) {
+      oldWidget.controller.removeListener(_listener);
+      _textureId = widget.controller.textureId;
+      widget.controller.addListener(_listener);
+    }
   }
 
   @override
   void deactivate() {
     super.deactivate();
-    widget.controller.removeListener(_listener);
+    if (!widget.controller._isDisposed) {
+      widget.controller.removeListener(_listener);
+    }
   }
 
   @override
