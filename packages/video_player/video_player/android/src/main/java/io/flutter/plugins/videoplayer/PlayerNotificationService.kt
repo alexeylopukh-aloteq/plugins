@@ -50,7 +50,6 @@ class PlayerNotificationService : Service() {
     private var contentIntent: PendingIntent? = null
 
     private var finish = false
-    private var isInit = false;
 
     companion object {
         private var activity: Activity? = null
@@ -59,21 +58,13 @@ class PlayerNotificationService : Service() {
         }
     }
 
-
-
-    override fun onCreate() {
-        super.onCreate()
-        startCommand()
-    }
-
     private fun startCommand() {
-        if (isInit)
-            return
-        isInit = true
         if (BackgroundModeManager.getInstance().player != null) {
             videoPlayer = BackgroundModeManager.getInstance().player!!
             exoPlayer = videoPlayer.exoPlayer
         } else {
+            initNotificationManager()
+            startForeground(NOTIFICATION_ID, createNotification().build())
             stopSelf()
             return
         }
@@ -128,7 +119,7 @@ class PlayerNotificationService : Service() {
                         or PlaybackStateCompat.ACTION_STOP)
                 .build())
 
-        if (mediaSession != null) {
+        if (mediaSession != null && this::exoPlayer.isInitialized) {
             sessionConnector = MediaSessionConnector(mediaSession!!)
             sessionConnector?.setPlayer(exoPlayer)
         }
@@ -158,12 +149,13 @@ class PlayerNotificationService : Service() {
                 .setSmallIcon(R.drawable.exo_controls_play)
                 .setDeleteIntent(PendingIntent.getBroadcast(this, NOTIFICATION_ID,
                         Intent(ACTION_CLOSE), FLAG_UPDATE_CURRENT))
-        builder.setContentTitle(videoPlayer.title)
-        builder.setContentText(videoPlayer.description)
-        builder.setSubText(videoPlayer.title)
-        builder.setLargeIcon(videoBitmap)
-
-        updateActions(builder)
+        if (this::videoPlayer.isInitialized && videoPlayer != null){
+            builder.setContentTitle(videoPlayer.title)
+            builder.setContentText(videoPlayer.description)
+            builder.setSubText(videoPlayer.title)
+            builder.setLargeIcon(videoBitmap)
+            updateActions(builder)
+        }
         return builder
     }
 
