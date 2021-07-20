@@ -295,6 +295,50 @@ public class Messages {
     }
   }
 
+  public static class QualityMessage {
+    private Long textureId;
+
+    public Long getTextureId() {
+      return textureId;
+    }
+
+    public void setTextureId(Long setterArg) {
+      this.textureId = setterArg;
+    }
+
+    public int widthSize;
+    public int heightSize;
+
+    HashMap toMap() {
+      HashMap<String, Object> toMapResult = new HashMap<>();
+      toMapResult.put("textureId", textureId);
+      toMapResult.put("widthSize", widthSize);
+      toMapResult.put("heightSize", heightSize);
+      return toMapResult;
+    }
+
+    static QualityMessage fromMap(HashMap map) {
+      QualityMessage fromMapResult = new QualityMessage();
+      Object textureId = map.get("textureId");
+      fromMapResult.textureId =
+              (textureId == null)
+                      ? null
+                      : ((textureId instanceof Integer) ? (Integer) textureId : (Long) textureId);
+      Object widthSize = map.get("widthSize");
+      fromMapResult.widthSize =
+              (widthSize == null)
+                      ? null
+                      : ((widthSize instanceof Integer) ? (Integer) widthSize : null);
+
+      Object heightSize = map.get("heightSize");
+      fromMapResult.heightSize =
+              (heightSize == null)
+                      ? null
+                      : ((heightSize instanceof Integer) ? (Integer) heightSize : null);
+      return fromMapResult;
+    }
+  }
+
   /** Generated class from Pigeon that represents data sent in messages. */
   public static class MixWithOthersMessage {
     private Boolean mixWithOthers;
@@ -348,6 +392,8 @@ public class Messages {
     void seekTo(PositionMessage arg);
 
     void pause(TextureMessage arg);
+
+    void setQuality(QualityMessage arg);
 
     void setMixWithOthers(MixWithOthersMessage arg);
 
@@ -689,6 +735,30 @@ public class Messages {
                 }
                 reply.reply(wrapped);
               });
+        } else {
+          channel.setMessageHandler(null);
+        }
+      }
+      {
+        BasicMessageChannel<Object> channel =
+                new BasicMessageChannel<>(
+                        binaryMessenger,
+                        "dev.flutter.pigeon.VideoPlayerApi.setQuality",
+                        new StandardMessageCodec());
+        if (api != null) {
+          channel.setMessageHandler(
+                  (message, reply) -> {
+                    HashMap<String, HashMap> wrapped = new HashMap<>();
+                    try {
+                      @SuppressWarnings("ConstantConditions")
+                      QualityMessage input = QualityMessage.fromMap((HashMap) message);
+                      api.setQuality(input);
+                      wrapped.put("result", null);
+                    } catch (Exception exception) {
+                      wrapped.put("error", wrapError(exception));
+                    }
+                    reply.reply(wrapped);
+                  });
         } else {
           channel.setMessageHandler(null);
         }

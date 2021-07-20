@@ -139,6 +139,11 @@ abstract class VideoPlayerPlatform {
     throw UnimplementedError('setMixWithOthers() has not been implemented.');
   }
 
+  /// Sets the playback max Quality
+  Future<void> setQuality(int textureId, int width, int height) {
+    throw UnimplementedError('setQuality() has not been implemented.');
+  }
+
   // This method makes sure that VideoPlayer isn't implemented with `implements`.
   //
   // See class doc for more details on why implementing this class is forbidden.

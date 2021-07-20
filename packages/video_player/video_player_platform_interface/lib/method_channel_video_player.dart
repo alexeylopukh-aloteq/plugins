@@ -92,6 +92,14 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
+  Future<void> setQuality(int textureId, int width, int height) {
+    return _api.setQuality(QualityMessage()
+      ..textureId = textureId
+      ..widthSize = width
+      ..heightSize = height);
+  }
+
+  @override
   Future<void> setPlaybackSpeed(int textureId, double speed) {
     assert(speed > 0);
 

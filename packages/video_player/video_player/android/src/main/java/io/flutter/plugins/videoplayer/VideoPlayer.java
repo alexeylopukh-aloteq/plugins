@@ -31,6 +31,7 @@ import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.source.smoothstreaming.DefaultSsChunkSource;
 import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.ui.PlayerNotificationManager;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
@@ -75,6 +76,7 @@ final public class VideoPlayer {
 
   private AudioManager audioManager;
   private AudioFocusRequest audioFocusRequest;
+  private DefaultTrackSelector trackSelector;
 
   public void incUsageCount() {
     usageCount++;
@@ -98,7 +100,8 @@ final public class VideoPlayer {
     this.description = description;
     this.previewUrl = previewUrl;
 
-    exoPlayer = new SimpleExoPlayer.Builder(context).build();
+    DefaultTrackSelector trackSelector = new DefaultTrackSelector(context);
+    exoPlayer = new SimpleExoPlayer.Builder(context).setTrackSelector(trackSelector).build();
 
     Uri uri = Uri.parse(dataSource);
 
@@ -269,6 +272,10 @@ final public class VideoPlayer {
 
   void pause() {
     exoPlayer.setPlayWhenReady(false);
+  }
+
+  void setQuality(int maxVideoWidth, int maxVideoHeight){
+    trackSelector.setParameters(trackSelector.buildUponParameters().setMaxVideoSize(maxVideoWidth, maxVideoHeight));
   }
 
   void setLooping(boolean value) {

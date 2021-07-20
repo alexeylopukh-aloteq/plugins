@@ -114,6 +114,32 @@ class VolumeMessage {
   }
 }
 
+class QualityMessage {
+  int textureId;
+  int widthSize;
+  int heightSize;
+  // ignore: unused_element
+  Map<dynamic, dynamic> _toMap() {
+    final Map<dynamic, dynamic> pigeonMap = <dynamic, dynamic>{};
+    pigeonMap['textureId'] = textureId;
+    pigeonMap['heightSize'] = heightSize;
+    pigeonMap['widthSize'] = widthSize;
+    return pigeonMap;
+  }
+
+  // ignore: unused_element
+  static QualityMessage _fromMap(Map<dynamic, dynamic> pigeonMap) {
+    if (pigeonMap == null) {
+      return null;
+    }
+    final QualityMessage result = QualityMessage();
+    result.textureId = pigeonMap['textureId'];
+    result.widthSize = pigeonMap['widthSize'];
+    result.heightSize = pigeonMap['heightSize'];
+    return result;
+  }
+}
+
 class PlaybackSpeedMessage {
   int textureId;
   double speed;
@@ -264,6 +290,26 @@ class VideoPlayerApi {
     final Map<dynamic, dynamic> requestMap = arg._toMap();
     const BasicMessageChannel<dynamic> channel = BasicMessageChannel<dynamic>(
         'dev.flutter.pigeon.VideoPlayerApi.setVolume', StandardMessageCodec());
+
+    final Map<dynamic, dynamic> replyMap = await channel.send(requestMap);
+    if (replyMap == null) {
+      throw PlatformException(
+          code: 'channel-error',
+          message: 'Unable to establish connection on channel.',
+          details: null);
+    } else if (replyMap['error'] != null) {
+      final Map<dynamic, dynamic> error = replyMap['error'];
+      throw PlatformException(
+          code: error['code'], message: error['message'], details: error['details']);
+    } else {
+      // noop
+    }
+  }
+
+  Future<void> setQuality(QualityMessage arg) async {
+    final Map<dynamic, dynamic> requestMap = arg._toMap();
+    const BasicMessageChannel<dynamic> channel = BasicMessageChannel<dynamic>(
+        'dev.flutter.pigeon.VideoPlayerApi.setQuality', StandardMessageCodec());
 
     final Map<dynamic, dynamic> replyMap = await channel.send(requestMap);
     if (replyMap == null) {

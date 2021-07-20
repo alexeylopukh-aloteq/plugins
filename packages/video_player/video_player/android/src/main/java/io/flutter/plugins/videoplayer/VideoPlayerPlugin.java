@@ -299,6 +299,12 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi, Activit
   }
 
   @Override
+  public void setQuality(Messages.QualityMessage arg) {
+    VideoPlayer player = videoPlayers.get(arg.getTextureId());
+    player.setQuality(arg.widthSize, arg.heightSize);
+  }
+
+  @Override
   public void setMixWithOthers(MixWithOthersMessage arg) {
     options.mixWithOthers = arg.getMixWithOthers();
   }
