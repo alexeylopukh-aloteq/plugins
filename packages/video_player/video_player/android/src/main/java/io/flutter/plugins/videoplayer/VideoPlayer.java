@@ -77,6 +77,7 @@ final public class VideoPlayer {
   private AudioManager audioManager;
   private AudioFocusRequest audioFocusRequest;
   private DefaultTrackSelector trackSelector;
+  private DefaultTrackSelector.Parameters defaultTrackParam;
 
   public void incUsageCount() {
     usageCount++;
@@ -100,7 +101,9 @@ final public class VideoPlayer {
     this.description = description;
     this.previewUrl = previewUrl;
 
-    DefaultTrackSelector trackSelector = new DefaultTrackSelector(context);
+    trackSelector = new DefaultTrackSelector(context);
+    defaultTrackParam = trackSelector.buildUponParameters().build();
+    trackSelector.setParameters(defaultTrackParam);
     exoPlayer = new SimpleExoPlayer.Builder(context).setTrackSelector(trackSelector).build();
 
     Uri uri = Uri.parse(dataSource);
@@ -275,7 +278,12 @@ final public class VideoPlayer {
   }
 
   void setQuality(int maxVideoWidth, int maxVideoHeight){
-    trackSelector.setParameters(trackSelector.buildUponParameters().setMaxVideoSize(maxVideoWidth, maxVideoHeight));
+    DefaultTrackSelector.Parameters parameters = trackSelector.buildUponParameters()
+            .setMaxVideoSize(maxVideoWidth, maxVideoHeight)
+            .setForceLowestBitrate(maxVideoWidth < 720)
+            .setForceHighestSupportedBitrate(maxVideoWidth >= 720)
+            .build();
+    trackSelector.setParameters(parameters);
   }
 
   void setLooping(boolean value) {
