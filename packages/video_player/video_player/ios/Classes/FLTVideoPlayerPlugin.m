@@ -367,7 +367,6 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
         if ([self duration] == 0) {
             return;
         }
-        [self changeQuality:@240 :@426];
         
         _isInitialized = true;
         _eventSink(@{
@@ -791,6 +790,7 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
         
         player = [[FLTVideoPlayer alloc] initWithURL:[NSURL URLWithString:input.uri]
                                         frameUpdater:frameUpdater createMessage:input];
+        [player changeQuality:@240 :@426];
         return [self onPlayerSetup:player frameUpdater:frameUpdater];
     } else {
         *error = [FlutterError errorWithCode:@"video_player" message:@"not implemented" details:nil];
