@@ -496,7 +496,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _videoPlayerPlatform.setVolume(_textureId, value.volume);
   }
 
-  Future<void> _setQuality(int width, int height) async {
+  Future<void> setQuality(int width, int height) async {
     if (!value.initialized || _isDisposed) {
       return;
     }
