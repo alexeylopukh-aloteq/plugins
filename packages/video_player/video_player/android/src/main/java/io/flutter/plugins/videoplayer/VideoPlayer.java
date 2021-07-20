@@ -102,7 +102,9 @@ final public class VideoPlayer {
     this.previewUrl = previewUrl;
 
     trackSelector = new DefaultTrackSelector(context);
-    defaultTrackParam = trackSelector.buildUponParameters().build();
+    defaultTrackParam = trackSelector.buildUponParameters().setMaxVideoSize(426, 240)
+            .setForceLowestBitrate(true)
+            .setForceHighestSupportedBitrate(false).build();
     trackSelector.setParameters(defaultTrackParam);
     exoPlayer = new SimpleExoPlayer.Builder(context).setTrackSelector(trackSelector).build();
 

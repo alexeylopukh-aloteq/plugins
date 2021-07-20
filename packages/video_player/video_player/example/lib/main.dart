@@ -32,7 +32,7 @@ class _ButterFlyAssetVideo extends StatefulWidget {
 
 class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
   VideoPlayerController _controller;
-  bool lowQuality = false;
+  bool lowQuality = true;
 
   @override
   void initState() {
@@ -95,9 +95,9 @@ On the Portless iPhone 13: https://youtu.be/Qfmeb2e_kb4''',
                           ),
                           onPressed: () {
                             if (lowQuality) {
-                              _controller.setQuality(426, 240);
-                            } else {
                               _controller.setQuality(1920, 1080);
+                            } else {
+                              _controller.setQuality(426, 240);
                             }
                             lowQuality = !lowQuality;
                             if (mounted) setState(() {});
