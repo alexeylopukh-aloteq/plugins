@@ -19,6 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class FLTOpenFullScreen;
 @class FLTMoveToBackgroundMode;
 @class FLTDisableBackgroundMode;
+@class FLTChangeQuality;
 
 @interface FLTTextureMessage : NSObject
 @property(nonatomic, strong, nullable) NSNumber *textureId;
@@ -75,6 +76,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, strong, nullable) NSNumber *textureId;
 @end
 
+@interface FLTChangeQuality : NSObject
+@property(nonatomic, strong, nullable) NSNumber *textureId;
+@property(nonatomic, strong, nullable) NSNumber *maxWidth;
+@property(nonatomic, strong, nullable) NSNumber *maxHeight;
+@end
+
 
 @protocol FLTVideoPlayerApi
 - (void)initialize:(FlutterError *_Nullable *_Nonnull)error;
@@ -97,6 +104,7 @@ NS_ASSUME_NONNULL_BEGIN
 -(void)openFullScreen:(FLTOpenFullScreen *)input error:(FlutterError *_Nullable *_Nonnull)error flutterCallback:(FlutterResult)callback;
 -(void)moveToBackgroundMode:(FLTMoveToBackgroundMode *)input error:(FlutterError *_Nullable *_Nonnull)error;
 -(void)disableBackgroundMode:(FLTDisableBackgroundMode *)input error:(FlutterError *_Nullable *_Nonnull)error;
+-(void)changeQuality:(FLTChangeQuality *)input error:(FlutterError *_Nullable *_Nonnull)error;
 @end
 
 extern void FLTVideoPlayerApiSetup(id<FlutterBinaryMessenger> binaryMessenger,

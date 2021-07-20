@@ -285,6 +285,32 @@ static NSDictionary *wrapResult(NSDictionary *result, FlutterError *error) {
 }
 @end
 
+@implementation FLTChangeQuality
++ (FLTChangeQuality *)fromMap:(NSDictionary *)dict {
+    FLTChangeQuality *result = [[FLTChangeQuality alloc] init];
+    result.textureId = dict[@"textureId"];
+    if ((NSNull *)result.textureId == [NSNull null]) {
+        result.textureId = nil;
+    }
+    result.maxHeight = dict[@"heightSize"];
+    if ((NSNull *)result.maxHeight == [NSNull null]) {
+        result.maxHeight = nil;
+    }
+    result.maxWidth = dict[@"widthSize"];
+    if ((NSNull *)result.maxWidth == [NSNull null]) {
+        result.maxWidth = nil;
+    }
+    return result;
+}
+- (NSDictionary *)toMap {
+    return [NSDictionary
+            dictionaryWithObjectsAndKeys:(self.textureId != nil ? self.textureId : [NSNull null]),
+            @"textureId", (self.maxHeight != nil ? self.maxHeight : [NSNull null]),
+            @"maxHeight", nil, (self.maxWidth != nil ? self.maxWidth : [NSNull null]),
+            @"maxWidth", nil];
+}
+@end
+
 void FLTVideoPlayerApiSetup(id<FlutterBinaryMessenger> binaryMessenger, id<FLTVideoPlayerApi> api) {
     {
         FlutterBasicMessageChannel *channel = [FlutterBasicMessageChannel
@@ -510,6 +536,21 @@ void FLTVideoPlayerApiSetup(id<FlutterBinaryMessenger> binaryMessenger, id<FLTVi
                 FlutterError *error;
                 FLTDisableBackgroundMode *input = [FLTDisableBackgroundMode fromMap:message];
                 [api disableBackgroundMode:input error:&error];
+                callback(wrapResult(nil, error));
+            }];
+        } else {
+            [channel setMessageHandler:nil];
+        }
+    }
+    {
+        FlutterBasicMessageChannel *channel = [FlutterBasicMessageChannel
+                                               messageChannelWithName:@"dev.flutter.pigeon.VideoPlayerApi.setQuality"
+                                               binaryMessenger:binaryMessenger];
+        if (api) {
+            [channel setMessageHandler:^(id _Nullable message, FlutterReply callback) {
+                FlutterError *error;
+                FLTChangeQuality *input = [FLTChangeQuality fromMap:message];
+                [api changeQuality:input error:&error];
                 callback(wrapResult(nil, error));
             }];
         } else {

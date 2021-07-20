@@ -18,6 +18,16 @@ int64_t FLTCMTimeToMillis(CMTime time) {
     return time.value * 1000 / time.timescale;
 }
 
+@implementation NSNumber (MyCGFloatValue)
+-(CGFloat)myCGFloatValue{
+    CGFloat result;
+    result = _Generic(result,
+            double: [self doubleValue],
+            float: [self floatValue]);
+    return result;
+}
+@end
+
 @interface FLTFrameUpdater : NSObject
 @property(nonatomic) int64_t textureId;
 @property(nonatomic, weak, readonly) NSObject<FlutterTextureRegistry>* registry;
@@ -357,6 +367,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
         if ([self duration] == 0) {
             return;
         }
+        [self changeQuality:@240 :@426];
         
         _isInitialized = true;
         _eventSink(@{
@@ -641,7 +652,25 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
 }
 
 
-
+- (void)changeQuality:(NSNumber*) width:(NSNumber*)height  {
+    CGFloat widthF = [width myCGFloatValue];
+    CGFloat heightF = [height myCGFloatValue];
+    int intValue = [width intValue];
+    double bitrate = 0;
+    switch (intValue) {
+        case 240:
+            bitrate = 700000;
+            break;
+        default:
+            bitrate = 0;
+    }
+    if (@available(iOS 11.0, *)) {
+        self.player.currentItem.preferredMaximumResolution = bitrate == 0 ? CGSizeZero : CGSizeMake(widthF, heightF);
+        self.player.currentItem.preferredPeakBitRate = bitrate;
+    } else {
+        // ingore
+    }
+}
 
 - (void)enableSystemPlayer {
     [self setRemoteControlCenterEnabled:YES];
@@ -891,6 +920,11 @@ willBeginFullScreenPresentationWithAnimationCoordinator:(id<UIViewControllerTran
     [player disableSystemPlayer];
 }
 
+
+- (void)changeQuality:(FLTChangeQuality *)input error:(FlutterError *_Nullable *_Nonnull)error {
+    FLTVideoPlayer *player = _players[input.textureId];
+    [player changeQuality:input.maxWidth :input.maxHeight];
+}
 
 -(void)applicationDidBecomeActive:(UIApplication *)application {
     if ([_players count] > 0) {

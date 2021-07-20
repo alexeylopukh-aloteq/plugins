@@ -95,9 +95,9 @@ On the Portless iPhone 13: https://youtu.be/Qfmeb2e_kb4''',
                           ),
                           onPressed: () {
                             if (lowQuality) {
-                              _controller.setQuality(1920, 1080);
+                              _controller.setQuality(1080, 1920);
                             } else {
-                              _controller.setQuality(426, 240);
+                              _controller.setQuality(240, 426);
                             }
                             lowQuality = !lowQuality;
                             if (mounted) setState(() {});
