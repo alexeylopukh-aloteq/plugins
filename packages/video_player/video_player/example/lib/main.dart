@@ -32,6 +32,7 @@ class _ButterFlyAssetVideo extends StatefulWidget {
 
 class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
   VideoPlayerController _controller;
+  bool lowQuality = false;
 
   @override
   void initState() {
@@ -41,7 +42,7 @@ class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
 
   void initController() {
     _controller = VideoPlayerController.network(
-        "https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4",
+        "https://cdn.locals.com/video/play/11677/11677_1drhgr8mf2g2lmd/11677_1drhgr8mf2g2lmd.m3u8",
         "Huge Apple 2021 Rumor Reactions!",
         '''Folding iPhones? The Return of Magsafe? Mac Pros with Apple Silicon? There's a lot to unpack!
 
@@ -84,50 +85,67 @@ On the Portless iPhone 13: https://youtu.be/Qfmeb2e_kb4''',
                 alignment: Alignment.topRight,
                 child: Padding(
                   padding: const EdgeInsets.only(top: 24, right: 5),
-                  child: Column(
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          Icons.picture_in_picture_alt_rounded,
-                          color: Colors.white,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            Icons.hd_rounded,
+                            color: lowQuality ? Colors.white.withOpacity(0.6) : Colors.white,
+                          ),
+                          onPressed: () {
+                            if (lowQuality) {
+                              _controller.setQuality(426, 240);
+                            } else {
+                              _controller.setQuality(1920, 1080);
+                            }
+                            lowQuality = !lowQuality;
+                            if (mounted) setState(() {});
+                          },
                         ),
-                        onPressed: () {
-                          _controller.moveToPip();
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.audiotrack_rounded,
-                          color: Colors.white,
+                        IconButton(
+                          icon: Icon(
+                            Icons.picture_in_picture_alt_rounded,
+                            color: Colors.white,
+                          ),
+                          onPressed: () {
+                            _controller.moveToPip();
+                          },
                         ),
-                        onPressed: () {
-                          _controller.moveToBackgroundMode();
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.assignment_return_rounded,
-                          color: Colors.white,
+                        IconButton(
+                          icon: Icon(
+                            Icons.audiotrack_rounded,
+                            color: Colors.white,
+                          ),
+                          onPressed: () {
+                            _controller.moveToBackgroundMode();
+                          },
                         ),
-                        onPressed: () {
-                          _controller.disableBackgroundMode();
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.close,
-                          color: Colors.white,
+                        IconButton(
+                          icon: Icon(
+                            Icons.assignment_return_rounded,
+                            color: Colors.white,
+                          ),
+                          onPressed: () {
+                            _controller.disableBackgroundMode();
+                          },
                         ),
-                        onPressed: () {
-                          if (_controller != null) {
-                            _controller.dispose();
-                            _controller = null;
-                          } else {
-                            initController();
-                          }
-                        },
-                      ),
-                    ],
+                        IconButton(
+                          icon: Icon(
+                            Icons.close,
+                            color: Colors.white,
+                          ),
+                          onPressed: () {
+                            if (_controller != null) {
+                              _controller.dispose();
+                              _controller = null;
+                            } else {
+                              initController();
+                            }
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
